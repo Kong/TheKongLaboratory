@@ -1,0 +1,46 @@
+# docker volume create worker1-containerd
+# docker volume create control1-containerd
+# kind create cluster --config platform/kind/config.yml
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kongee
+
+networking:
+  apiServerAddress: "127.0.0.1"
+  apiServerPort: 6443
+
+nodes:
+
+  # Control Plane Node
+  - role: control-plane
+    image: kindest/node:v1.23.3
+    # Control-Plane Persistent image cache (optional)
+    extraMounts:
+    - hostPath: /var/lib/docker/volumes/control1-containerd/_data
+      containerPath: /var/lib/containerd
+
+  # Worker Node
+  - role: worker
+    image: kindest/node:v1.23.3
+    # Worker Persistent image cache (optional)
+    extraMounts:
+      - hostPath: /var/lib/docker/volumes/worker1-containerd/_data
+        containerPath: /var/lib/containerd
+    # Attach our kind cluster to host ports 80 and 443
+    extraPortMappings:
+    - listenAddress: "127.0.0.1"
+      protocol: TCP
+      containerPort: 80
+      hostPort: 80
+    - listenAddress: "127.0.0.1"
+      protocol: TCP
+      containerPort: 443
+      hostPort: 443
+    # We are going to add an ingress label to this node
+    kubeadmConfigPatches:
+    - |
+      kind: JoinConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress=true"
