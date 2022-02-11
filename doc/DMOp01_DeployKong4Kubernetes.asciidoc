@@ -8,9 +8,9 @@ In this series we will dive into using both Kong API Gateway for service publish
 
 === Tools
 
- Kong Gateway is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
+Kong Gateway is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
 
- Pulumi is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
+Pulumi is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
 
 .Guide
 
