@@ -1,0 +1,85 @@
+:showtitle:
+:doctitle: Dev-my-Ops | Kong on Kubernetes with Pulumi
+
+.Introduction
+The quest for resilience and agility has driven us into the modern age of microservices. Bringing services to market on microservice architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
+
+In this series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate and orchestrate our infrastructure, deploy our applications, and configure kong.
+
+=== Tools
+
+ Kong Gateway is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
+
+ Pulumi is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
+
+.Guide
+
+This article is designed for you to follow along using Kubernetes-in-Docker (kind). To start, we will check that we have all of our dependency prerequisites. +
+
+Dependencies:
+
+- https://code.visualstudio.com[VSCode] (Optional)
+- git cli / gh cli
+- https://docs.docker.com/engine/reference/run[docker] (for linux) or https://www.docker.com/products/docker-desktop[docker-desktop] (for Mac)
+- https://kind.sigs.k8s.io[Kind]
+- https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl] (https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac])
+- https://helm.sh/docs/intro/install[Helm]
+- https://httpie.io/docs/cli/installation[httpie]
+
+
+Okay, now that we are ready, let's get started. Let's start by cloning the repo. +
+```sh
+git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs
+```
+
+Launch Kubernetes-in-Docker (kind) +
+```sh
+kind create cluster --config platform/kind/config.yml
+```
+
+Great now we have the code we need, and a platform to deploy to.
+
+Pulumi Deploy Dependencies
+Pulumi Deploy Kong
+Pulumi Publish Test App httpbin via Kong
+Pulumi Deploy Test App PodInfo via Kong
+
+
+Prerequisites:
+Clone Demo Repo:
+git clone github.com/project/blablabla
+kind version
+docker version
+
+Start Kubernetes-in-Docker:
+	Blablabla steps
+
+Deploy Dependencies:
+Eg:
+cert-manager
+postgres
+podinfo
+httpbin
+
+Deploy Kong + Ingress Controller: (OSS Version)
+Eg:
+Configure variables & secrets
+Topology: Integrated (non-hybrid deploy)
+
+Deploy Test Apps:
+Eg:
+PodInfo via pulumi
+HttpBin via pulumi
+
+Configure Ingress(es):
+Eg:
+Basic ingress objects in Pulumi
+
+Teasers for future:
+Eg:
+Configure Kong Plugins via Pulumi
+Rate Limiting
+OIDC
+Consumers
+Token Auth
+Etc
