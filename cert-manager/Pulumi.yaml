@@ -1,0 +1,4 @@
+# https://github.com/pulumi/pulumi-kubernetes-cert-manager
+name: kind-kongce-cert-manager
+description: A Basic CertManager & SelfSigned Cluster Issuer Deployment
+runtime: nodejs
