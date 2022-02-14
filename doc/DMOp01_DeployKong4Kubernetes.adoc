@@ -16,7 +16,7 @@ Pulumi is a cloud engineering platform that brings infrastructure teams, develop
 
 This article is designed for you to follow along using Kubernetes-in-Docker (kind). To start, we will check that we have all of our dependency prerequisites. +
 
-Dependencies:
+==== Dependencies:
 
 - https://code.visualstudio.com[VSCode] (Optional)
 - https://docs.docker.com/engine/reference/run[docker] (for linux) or https://www.docker.com/products/docker-desktop[docker-desktop] (for Mac)
@@ -43,17 +43,17 @@ kind create cluster --config platform/kind/config.yml
 ```sh
 kubectl cluster-info --context kind-kongpulumilabs01
 ```
- Great! Now we have the code we need, and a platform to deploy it to! +
+Great! Now we have the code we need, and a platform to deploy it to! +
 
 .Deploy Kong with Pulumi +
- Before we can deploy our Kong Gateway, we need to install the cert-manager Helm chart. +
+Before we can deploy our Kong Gateway, we need to install the cert-manager Helm chart. +
 
-- Export your pulumi account name
+Export your pulumi account name
 ```sh
 export unamePulumi=usrbinkat
 ```
 
-- Deploy Kong Gateway, Cert Manager and Postgres +
+Deploy Kong Gateway, Cert Manager and Postgres +
 ```sh
 cd platform/kong
 npm install
