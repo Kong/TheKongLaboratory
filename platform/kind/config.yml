@@ -43,4 +43,4 @@ nodes:
       kind: JoinConfiguration
       nodeRegistration:
         kubeletExtraArgs:
-          node-labels: "ingress=true"
+          node-labels: "ingress-ready=true,node-role.kubernetes.io/worker=''"

@@ -1,4 +1,0 @@
-name: kong
-description: A minimal installation of the latest version of Kong Helm chart
-runtime: nodejs
-template:

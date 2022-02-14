@@ -19,13 +19,14 @@ This article is designed for you to follow along using Kubernetes-in-Docker (kin
 Dependencies:
 
 - https://code.visualstudio.com[VSCode] (Optional)
-- git cli / gh cli
 - https://docs.docker.com/engine/reference/run[docker] (for linux) or https://www.docker.com/products/docker-desktop[docker-desktop] (for Mac)
-- https://kind.sigs.k8s.io[Kind]
 - https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl] (https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac])
+- https://kind.sigs.k8s.io[Kind]
 - https://helm.sh/docs/intro/install[Helm]
+- https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Pulumi]
+- https://docs.npmjs.com/downloading-and-installing-node-js-and-npm[npm]
 - https://httpie.io/docs/cli/installation[httpie]
-
+- https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git client]
 
 Okay, now that our system is ready, let's grab the code and start our local kubernetes environment. +
 
@@ -44,33 +45,23 @@ kubectl cluster-info --context kind-kongpulumilabs01
 ```
  Great! Now we have the code we need, and a platform to deploy it to! +
 
-.Deploy Cert Manager and a SelfSigned ClusterIssuer +
+.Deploy Kong with Pulumi +
  Before we can deploy our Kong Gateway, we need to install the cert-manager Helm chart. +
+
+- Export your pulumi account name
 ```sh
-cd cert-manager
-export unamePulumi='usrbinkat'
+export unamePulumi=usrbinkat
+```
+
+- Deploy Kong Gateway, Cert Manager and Postgres +
+```sh
+cd platform/kong
+npm install
 pulumi stack init ${unamePulumi}/KongPulumiLabs01
 pulumi up --stack KongPulumiLabs01
 ```
 
- Pulumi Deploy Postgres +
- Pulumi Deploy Kong +
- Pulumi Publish Test App httpbin via Kong
- Pulumi Deploy Test App PodInfo via Kong
-
-Deploy Dependencies:
-
- cert-manager
- postgres
- podinfo
- httpbin
-
-Deploy Kong + Ingress Controller: (OSS Version)
-
- Configure variables & secrets
- Topology: Integrated (non-hybrid deploy)
-
-Deploy Test Apps:
+.Deploy Test Apps +
 
  PodInfo via pulumi
  HttpBin via pulumi
@@ -80,8 +71,9 @@ Configure Ingress(es):
  Basic ingress objects in Pulumi
 
 === Conclusions
+In this post, we saw how to deploy a Kong Gateway, and how to deploy a test app with Pulumi. We also saw how to configure ingress objects in Pulumi.
 
-==== Cleanup
+=== Cleanup
 ```sh
 pulumi destroy --stack KongPulumiLabs01-kongce
 pulumi stack rm --stack KongPulumiLabs01-kongce
