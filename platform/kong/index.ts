@@ -405,7 +405,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
             database: "off",
             role: "data_plane",
             prefix: "/kong_prefix/",
-            cluster_control_plane: pulumi.interpolate`${kongControlPlane}.kong.srv.cluster.local:8005`,
+            cluster_control_plane: pulumi.interpolate`${kongControlPlane.status.name}:8005`,
             ssl_cert: "/etc/secrets/kong-services-tls/tls.crt",
             ssl_cert_key: "/etc/secrets/kong-services-tls/tls.key",
             cluster_cert: "/etc/secrets/kong-cluster-mtls/tls.crt",
