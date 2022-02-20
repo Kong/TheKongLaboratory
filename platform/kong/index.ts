@@ -381,7 +381,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
 });
 
 // Export Cluster Service Names
-const srvClusterName = k8s.core.v1.Service.get("cluster", pulumi.interpolate`${nsNameKong}/${kongControlPlane.status.name}-kong-cluster`);
+//const srvClusterName = k8s.core.v1.Service.get("cluster", pulumi.interpolate`${nsNameKong}/${kongControlPlane.status.name}-kong-cluster`);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +405,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
             database: "off",
             role: "data_plane",
             prefix: "/kong_prefix/",
-            cluster_control_plane: pulumi.interpolate`${srvClusterName}:8005`,
+            cluster_control_plane: pulumi.interpolate`${kongControlPlane}.kong.srv.cluster.local:8005`,
             ssl_cert: "/etc/secrets/kong-services-tls/tls.crt",
             ssl_cert_key: "/etc/secrets/kong-services-tls/tls.key",
             cluster_cert: "/etc/secrets/kong-cluster-mtls/tls.crt",
@@ -457,4 +457,3 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const certManagerStatus = manager.status;
-export const srvClusterNameStatus = srvClusterName;
