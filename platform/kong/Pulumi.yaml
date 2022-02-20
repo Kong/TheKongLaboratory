@@ -1,4 +1,4 @@
-# https://github.com/pulumi/pulumi-kubernetes-cert-manager
-name: kind-kongce-cert-manager
-description: A Basic CertManager & SelfSigned Cluster Issuer Deployment
+# https://github.com/Kong/KongPulumiLabs
+name: kind-kong
+description: Basic Deployment of Kong with Pulumi on Kind
 runtime: nodejs

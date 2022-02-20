@@ -37,7 +37,10 @@ git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/ko
 
 .Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
 ```sh
-kind create cluster --config platform/kind/config.yml
+cd platform/kong
+docker volume create worker1-containerd
+docker volume create control1-containerd
+kind create cluster --config ../kind/config.yml
 ```
 .Verify successful Kind deploy with:
 ```sh
@@ -50,15 +53,22 @@ Before we can deploy our Kong Gateway, we need to install the cert-manager Helm 
 
 Export your pulumi account name
 ```sh
-export unamePulumi=usrbinkat
+export pulumiUserName="usrbinkat"
+export pulumiStackName="KongPulumiLabs01"
 ```
 
 Deploy Kong Gateway, Cert Manager and Postgres +
 ```sh
-cd platform/kong
 npm install
-pulumi stack init ${unamePulumi}/KongPulumiLabs01
-pulumi up --stack KongPulumiLabs01
+pulumi stack init ${pulumiUserName}/${pulumiStackName}
+pulumi --stack ${pulumiStackName} config set kubernetes:enableDryRun true
+pulumi --stack ${pulumiStackName} config set kubernetes:context kind-kongpulumilabs01
+```
+
+Double check kubectl context & Run Pulumi Deployment +
+```sh
+kubectl config get-contexts
+pulumi --stack ${pulumiStackName} up -y
 ```
 
 .Deploy Test Apps +
@@ -75,11 +85,12 @@ In this post, we saw how to deploy a Kong Gateway, and how to deploy a test app 
 
 === Cleanup
 ```sh
-pulumi destroy --stack KongPulumiLabs01-kongce
-pulumi stack rm --stack KongPulumiLabs01-kongce
-pulumi destroy --stack KongPulumiLabs01-certmanager
-pulumi stack rm --stack KongPulumiLabs01-certmanager
+pulumi --stack KongPulumiLabs01 destroy -y
 kind delete cluster --name=kongpulumilabs01
+pulumi --stack KongPulumiLabs01 stack rm -y
+```
+```sh
+pulumi stack export | pulumi stack import ; pulumi refresh --stack KongPulumiLabs01 -y
 ```
 
 Teasers for future:
