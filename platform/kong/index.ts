@@ -1,4 +1,3 @@
-// https://github.com/pulumi/pulumi-kubernetes-cert-manager
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as certmanager from "@pulumi/kubernetes-cert-manager";
@@ -66,6 +65,7 @@ const nsKong = new k8s.core.v1.Namespace(nsNameKong, {
 const manager = new certmanager.CertManager("cert-manager", {
     installCRDs: true,
     helmOptions: {
+        name: "cert-manager",
         namespace: nsNameCertManager,
         values: {
             global: {
@@ -170,17 +170,14 @@ const kongPostgres = new k8s.helm.v3.Release("postgres", {
     repositoryOpts: { repo: "https://charts.bitnami.com/bitnami" },
     values: {
         namespace: nsNameKong,
-        //fullnameOverride: "postgres",
         global: {
             storageClass: "",
             postgresql: {
                 auth: {
                     username: "kong",
                     database: "kong",
-                    password: "kong",
+                    password: kongPostgresPassword,
                     postgresPassword: "",
-                    //password: kongPostgresPassword,
-                    //postgresPassword: kongPostgresPassword,
                 },
             },
         },
@@ -270,6 +267,7 @@ const kongClusterMtls = new k8s.apiextensions.CustomResource("kong-cluster-mtls"
 
 // Helm Kong Integrated Deploy
 const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
+    name: "controlplane",
     chart: "kong",
     namespace: nsNameKong,
     repositoryOpts: { repo: "https://charts.konghq.com/" },
@@ -303,13 +301,12 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             portal: "off",
 
             // START Database Configuration //
+            pg_port: "5432",
             pg_user: "kong",
             pg_database: "kong",
-            pg_password: "kong",
-            pg_port: "5432",
+            pg_password: kongPostgresPassword,
             pg_host: pulumi.interpolate`${kongPostgres.status.name}-postgresql.kong.svc.cluster.local`,
             database: "postgres",
-            //pg_password: kongPostgresPassword,
             pg_ssl_verify: "off", // WARN: database ssl verification disabled, not recommended for production
             pg_ssl: "off", // WARN: database SSL disabled on DB, do not use this mode in production
             // END Database Configuration //
@@ -380,8 +377,13 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
         },
         ingressController: {
-            enabled: false,
+            enabled: true,
             installCRDs: false,
+            env: {
+                kong_admin_tls_skip_verify: "true",
+                kong_admin_token: kongAdminPassword,
+                publish_service: "kong/dataplane-kong-proxy",
+            },
         },
         clusterTelemetry: {
             enabled: false,
@@ -396,7 +398,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
         },
     },
-}, {
+},{
     dependsOn: [
         kongPostgres,
         kongServicesTls,
@@ -409,146 +411,81 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
     },
 });
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//// Kong Dataplane                                                                                 //
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
-//    name: "dataplane",
-//    chart: "kong",
-//    namespace: nsNameKong,
-//    skipCrds: true,
-//    repositoryOpts:{
-//        repo: "https://charts.konghq.com/",
-//    },
-//    values: {
-//        fullnameOverride: "dataplane",
-//        namespace: nsNameKong,
-//        replicaCount: 1,
-//        image: {
-//            repository: "docker.io/kong/kong-gateway",
-//            tag: kongImageTag,
-//        },
-//        env: {
-//            database: "off",
-//            role: "data_plane",
-//            prefix: "/kong_prefix/",
-//            cluster_control_plane: pulumi.interpolate`${kongControlPlane.status.name}-${nsNameKong}-cluster:8005`,
-//            ssl_cert: "/etc/secrets/kong-services-tls/tls.crt",
-//            ssl_cert_key: "/etc/secrets/kong-services-tls/tls.key",
-//            cluster_cert: "/etc/secrets/kong-cluster-mtls/tls.crt",
-//            cluster_cert_key: "/etc/secrets/kong-cluster-mtls/tls.key",
-//        },
-//        secretVolumes: [
-//            "kong-services-tls",
-//            "kong-cluster-mtls",
-//        ],
-//        proxy: {
-//            enabled: true,
-//            type: "ClusterIP",
-//            http: {
-//                enabled: true,
-//                hostport: 80,
-//                containerPort: 8080,
-//            },
-//            tls: {
-//                enabled: true,
-//                hostport: 443,
-//                containerPort: 8443,
-//            },
-//            ingress: {
-//                enabled: false,
-//            },
-//        },
-//        ingressController: {
-//            enabled: false,
-//            installCRDs: false,
-//        },
-//        admin: {enabled: false},
-//        portal: {enabled: false},
-//        cluster: {enabled: false},
-//        manager: {enabled: false},
-//        portalapi: {enabled: false},
-//  },
-//},{
-//    provider: kubeconfig,
-//    parent: kongControlPlane,
-//    dependsOn: [
-//        kongPostgres,
-//        kongControlPlane,
-//        kongClusterMtls,
-//        kongServicesTls,
-//    ],
-//    customTimeouts: {
-//        create: "2m",
-//        update: "2m",
-//        delete: "2m",
-//    },
-//});
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//// Kong Ingress Controller
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//const kongIngressController = new k8s.helm.v3.Release("ingress-controller", {
-//    chart: "kong",
-//    namespace: nsNameKong,
-//    skipCrds: true,
-//    repositoryOpts:{
-//        repo: "https://charts.konghq.com/",
-//    },
-//    values: {
-//        namespace: nsNameKong,
-//        replicaCount: 1,
-//        image: {
-//            repository: "docker.io/kong/kong-gateway",
-//            tag: kongImageTag,
-//        },
-//        env: {
-//            database: "off",
-//            prefix: "/kong_prefix/",
-//            role: "control_plane",
-//            cluster_control_plane: pulumi.interpolate`${kongControlPlane.status.name}-${nsNameKong}-cluster:8005`,
-//            ssl_cert: "/etc/secrets/kong-services-tls/tls.crt",
-//            ssl_cert_key: "/etc/secrets/kong-services-tls/tls.key",
-//            cluster_cert: "/etc/secrets/kong-cluster-mtls/tls.crt",
-//            cluster_cert_key: "/etc/secrets/kong-cluster-mtls/tls.key",
-//        },
-//        secretVolumes: [
-//            "kong-services-tls",
-//            "kong-cluster-mtls",
-//        ],
-//        proxy: {
-//            enabled: false,
-//        },
-//        ingressController: {
-//            enabled: true,
-//            installCRDs: false,
-//            env: {
-//                publish_service: pulumi.interpolate`kong/${kongControlPlane.status.name}-${nsNameKong}-proxy`,
-//                kong_admin_token: kongAdminPassword, // TODO: change hardcoded admin token to pulumi config variable
-//                kong_admin_tls_skip_verify: "true",
-//            },
-//        },
-//        admin: {enabled: false},
-//        portal: {enabled: false},
-//        cluster: {enabled: false},
-//        manager: {enabled: false},
-//        portalapi: {enabled: false},
-//  },
-//},{
-//    provider: kubeconfig,
-//    parent: kongControlPlane,
-//    dependsOn: [
-//        kongPostgres,
-//        kongControlPlane,
-//        kongClusterMtls,
-//        kongServicesTls,
-//    ],
-//    customTimeouts: {
-//        create: "2m",
-//        update: "2m",
-//        delete: "2m",
-//    },
-//});
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Kong Dataplane                                                                                 //
+////////////////////////////////////////////////////////////////////////////////////////////////////
+const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
+    chart: "kong",
+    name: "dataplane",
+    skipCrds: true,
+    namespace: nsNameKong,
+    repositoryOpts:{
+        repo: "https://charts.konghq.com/",
+    },
+    values: {
+        namespace: nsNameKong,
+        replicaCount: 1,
+        image: {
+            repository: "docker.io/kong/kong-gateway",
+            tag: kongImageTag,
+        },
+        env: {
+            database: "off",
+            role: "data_plane",
+            prefix: "/kong_prefix/",
+            ssl_cert: "/etc/secrets/kong-services-tls/tls.crt",
+            ssl_cert_key: "/etc/secrets/kong-services-tls/tls.key",
+            cluster_cert: "/etc/secrets/kong-cluster-mtls/tls.crt",
+            cluster_cert_key: "/etc/secrets/kong-cluster-mtls/tls.key",
+            lua_ssl_trusted_certificate: "/etc/secrets/kong-cluster-mtls/tls.crt",
+            cluster_control_plane: "controlplane-kong-cluster:8005",
+        },
+        secretVolumes: [
+            "kong-services-tls",
+            "kong-cluster-mtls",
+        ],
+        proxy: {
+            enabled: true,
+            type: "ClusterIP",
+            http: {
+                enabled: true,
+                hostport: 80,
+                containerPort: 8080,
+            },
+            tls: {
+                enabled: true,
+                hostport: 443,
+                containerPort: 8443,
+            },
+            ingress: {
+                enabled: false,
+            },
+        },
+        ingressController: {
+            enabled: false,
+            installCRDs: false,
+        },
+        admin: {enabled: false},
+        portal: {enabled: false},
+        cluster: {enabled: false},
+        manager: {enabled: false},
+        portalapi: {enabled: false},
+  },
+},{
+    provider: kubeconfig,
+    parent: kongControlPlane,
+    dependsOn: [
+        kongPostgres,
+        kongControlPlane,
+        kongClusterMtls,
+        kongServicesTls,
+    ],
+    customTimeouts: {
+        create: "2m",
+        update: "2m",
+        delete: "2m",
+    },
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const certManagerStatus = manager.status;
