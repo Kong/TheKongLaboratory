@@ -90,7 +90,7 @@ kind delete cluster --name=kongpulumilabs01
 pulumi --stack KongPulumiLabs01 stack rm -y
 ```
 ```sh
-pulumi stack export | pulumi stack import ; pulumi refresh --stack KongPulumiLabs01 -y
+pulumi stack export --stack KongPulumiLabs01 | pulumi stack import --stack KongPulumiLabs01 ; pulumi refresh --stack KongPulumiLabs01 -y
 ```
 
 Teasers for future:
