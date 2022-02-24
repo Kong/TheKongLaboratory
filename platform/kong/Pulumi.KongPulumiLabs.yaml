@@ -1,0 +1,3 @@
+config:
+  kubernetes:context: kind-kongpulumilabs
+  kubernetes:enableDryRun: "true"
