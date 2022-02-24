@@ -63,6 +63,11 @@ pulumi stack init ${pulumiUserName}/KongPulumiLabs
 pulumi stack select KongPulumiLabs
 ```
 
+Set Configuration Variables +
+```sh
+pulumi config set --secret kong:license
+```
+
 Double check kubectl context & Run Pulumi Deployment +
 ```sh
 kubectl config get-contexts

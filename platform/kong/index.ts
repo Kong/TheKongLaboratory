@@ -3,6 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as certmanager from "@pulumi/kubernetes-cert-manager";
 import { env } from "process";
+const config = new pulumi.Config("kong");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -11,6 +12,10 @@ const name = "kong";
 
 // KubeConfig Context
 const kubeConfigContext = "kind-kongpulumilabs";
+
+// Kong Session Config
+const secretKongSessionConfigSalt = "this-is-a-random-session-config-salt";
+const secretKongSessionConfigCookieSecure = false;
 
 // Kong Admin Credentials
 const kongSuperAdminPassword = "kong_admin";
@@ -22,11 +27,14 @@ const kongManagerSubdomain = "manager.kong";
 const kongBaseDomain = "kongpulumilabs.arpa";
 
 // Kong Admin Credentials
+const kongPostgresPort = "5432";
 const kongPostgresUser = "kong";
 const kongPostgresPassword = "kong";
+const kongPostgresAdminPassword = "kong";
+const kongPostgresReplicationPassword = "kong";
 const kongPostgresDatabase = "kong";
 const kongPostgresHost = "postgres-postgresql.kong.svc.cluster.local";
-const kongPostgresPort = "5432";
+const kongEnterpriseLicense = config.requireSecret("license");
 
 // Kong plugins
 const kongPlugins = "bundled";
@@ -197,16 +205,13 @@ const secretPostgresCredentials = new k8s.core.v1.Secret("postgresCredentials", 
         namespace: "kong",
     },
     stringData: {
-        //pg_user: kongPostgresUser,
-        //pg_password: kongPostgresPassword,
-        //pg_database: kongPostgresDatabase,
-        //pg_host: kongPostgresHost,
-        //pg_port: kongPostgresPort,
-        pg_user: Buffer.from(kongPostgresUser).toString("base64"),
-        pg_password: Buffer.from(kongPostgresPassword).toString("base64"),
-        pg_database: Buffer.from(kongPostgresDatabase).toString("base64"),
-        pg_host: Buffer.from(kongPostgresHost).toString("base64"),
-        pg_port: Buffer.from(kongPostgresPort).toString("base64"),
+        "port": kongPostgresPort,
+        "host": kongPostgresHost,
+        "user": kongPostgresUser,
+        "password": kongPostgresPassword,
+        "postgres-password": kongPostgresAdminPassword,
+        "replication-password": kongPostgresReplicationPassword,
+        "database": kongPostgresDatabase,
     },
 }, {
     dependsOn: [
@@ -226,38 +231,9 @@ const kongPostgres = new k8s.helm.v3.Release("postgres", {
             storageClass: "",
             postgresql: {
                 auth: {
-                    username: {
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: "kong-postgres-config",
-                                key: "pg_user",
-                            },
-                        },
-                    },
-                    password: {
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: "kong-postgres-config",
-                                key: "pg_password",
-                            },
-                        },
-                    },
-                    database: {
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: "kong-postgres-config",
-                                key: "pg_database",
-                            },
-                        },
-                    },
-                    postgresPassword: {
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: "kong-postgres-config",
-                                key: "pg_password",
-                            },
-                        },
-                    },
+                    username: kongPostgresUser,
+                    database: kongPostgresDatabase,
+                    existingSecret: secretPostgresCredentials.metadata.name,
                 },
             },
         },
@@ -361,14 +337,12 @@ const secretKongClusterCert = new k8s.core.v1.Secret(`${name}-cluster-cert`, {
     kind: "Secret",
     type: "tls",
     metadata: {
-        name: "kong-kong-cluster",
+        name: "kong-cluster-cert",
         namespace: "kong",
     },
     stringData: {
         "tls.crt": kongClusterCert.certPem,
         "tls.key": kongClusterCert.privateKeyPem,
-        //"tls.crt": kongClusterCert.certPem,
-        //"tls.key": kongClusterCert.privateKeyPem,
     },
 }, {
     dependsOn: [
@@ -378,6 +352,46 @@ const secretKongClusterCert = new k8s.core.v1.Secret(`${name}-cluster-cert`, {
     provider: kubeconfig,
 });
 
+// Create Kong Enterprise License Secret
+const secretKongEnterpriseLicense = new k8s.core.v1.Secret("kong-enterprise-license", {
+    apiVersion: "v1",
+    kind: "Secret",
+    type: "Opaque",
+    metadata: {
+        name: "kong-enterprise-license",
+        namespace: nsNameKong,
+    },
+    stringData: {
+      'license': kongEnterpriseLicense,
+    },
+},{
+    provider: kubeconfig,
+    dependsOn: [
+        nsKong,
+    ],
+});
+// Create client session config secret
+const portalSessionConfData = pulumi.interpolate`{"storage":"kong","secret":"${secretKongSessionConfigSalt}","cookie_name":"admin_session","cookie_samesite":"off","cookie_secure":${secretKongSessionConfigCookieSecure}}`;
+const adminGuiSessionConfData = pulumi.interpolate`{"storage": "kong", "secret": "${secretKongSessionConfigSalt}", "cookie_name": "portal_session", "cookie_samesite":"off", "cookie_secure":${secretKongSessionConfigCookieSecure}}`;
+const secretKongSessionConfig = new k8s.core.v1.Secret("kong-session-config", {
+    apiVersion: "v1",
+    kind: "Secret",
+    type: "Opaque",
+    metadata: {
+        name: "kong-session-config",
+        namespace: nsNameKong,
+    },
+    stringData: {
+      'portal_session_conf': portalSessionConfData,
+      'admin_gui_session_conf': adminGuiSessionConfData,
+    },
+},{
+    provider: kubeconfig,
+    dependsOn: [
+        nsKong,
+    ],
+});
+
 // Kong Super Admin Credentials
 const secretKongSuperAdminCredentials = new k8s.core.v1.Secret("kong-enterprise-superuser-password", {
     apiVersion: "v1",
@@ -385,7 +399,7 @@ const secretKongSuperAdminCredentials = new k8s.core.v1.Secret("kong-enterprise-
     type: "Opaque",
     metadata: {
         name: "kong-enterprise-superuser-password",
-        namespace: "kong",
+        namespace: nsNameKong,
     },
     data: {
         password: Buffer.from(kongSuperAdminPassword).toString("base64"),
@@ -466,9 +480,9 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 enabled: true,
             },
             rbac: {
+                enabled: true,
                 admin_api_auth: "basic-auth",
                 admin_gui_auth_conf_secret: "kong-session-config",
-                enabled: true,
                 session_conf_secret: "kong-session-config",
             },
             smtp: {
@@ -503,7 +517,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             proxy_error_log: "/dev/stdout",
             nginx_worker_processes: "2",
             prefix: "/kong_prefix/",
-            smtp_mock: "off",
+            smtp_mock: "on",
             vitals: true,
 
             // START Kong Portal Configuration //
@@ -532,40 +546,40 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             pg_port: {
                 valueFrom: {
                     secretKeyRef: {
-                        name: "kong-postgres-config",
-                        key: "pg_port",
+                        name: secretPostgresCredentials.metadata.name,
+                        key: "port",
                     },
                 },
             },
             pg_user: {
                 valueFrom: {
                     secretKeyRef: {
-                        name: "kong-postgres-config",
-                        key: "pg_user",
+                        name: secretPostgresCredentials.metadata.name,
+                        key: "user",
                     },
                 },
             },
             pg_database: {
                 valueFrom: {
                     secretKeyRef: {
-                        name: "kong-postgres-config",
-                        key: "pg_database",
+                        name: secretPostgresCredentials.metadata.name,
+                        key: "database",
                     },
                 },
             },
             pg_password: {
                 valueFrom: {
                     secretKeyRef: {
-                        name: "kong-postgres-config",
-                        key: "pg_password",
+                        name: secretPostgresCredentials.metadata.name,
+                        key: "password",
                     },
                 },
             },
             pg_host: {
                 valueFrom: {
                     secretKeyRef: {
-                        name: "kong-postgres-config",
-                        key: "pg_host",
+                        name: secretPostgresCredentials.metadata.name,
+                        key: "host",
                     },
                 },
             },
@@ -748,9 +762,14 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
         kongPostgres,
         kongServicesTls,
         kongClusterCert,
+        secretKongSessionConfig,
         secretKongSuperAdminCredentials,
     ],
-    customTimeouts: {create: "2m", update: "2m", delete: "2m"},
+    customTimeouts: {
+        create: "1m",
+        update: "1m",
+        delete: "1m"
+    },
     provider: kubeconfig,
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -766,7 +785,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
         admin: {enabled: false},
         affinity: {
             podAffinity: {
-                prefferedDuringSchedulingIgnoredDuringExecution: [
+                preferredDuringSchedulingIgnoredDuringExecution: [
                     {
                         podAffinityTerm: {
                             labelSelector: {
@@ -863,9 +882,9 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
         kongServicesTls,
     ],
     customTimeouts: {
-        create: "2m",
-        update: "2m",
-        delete: "2m",
+        create: "1m",
+        update: "1m",
+        delete: "1m",
     },
 });
 
