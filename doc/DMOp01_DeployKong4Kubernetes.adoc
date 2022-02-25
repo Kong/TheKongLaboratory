@@ -89,8 +89,9 @@ In this post, we saw how to deploy a Kong Gateway, and how to deploy a test app 
 === Cleanup
 ```sh
 pulumi --stack kongpulumilabs destroy -y
-kind delete cluster --name=kongpulumilabs
 pulumi --stack kongpulumilabs stack rm -y
+kind delete cluster --name=kongpulumilabs
+docker volume rm worker1-containerd control1-containerd
 ```
 ```sh
 pulumi stack export --stack kongpulumilabs | pulumi stack import --stack kongpulumilabs

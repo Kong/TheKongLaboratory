@@ -309,8 +309,9 @@ const kongServicesTls = new k8s.apiextensions.CustomResource("kong-controlplane-
 // TODO: Activate Cluster MTLS Certificate
 //// Issue certificate for kong cluster mtls
 const kongClusterKey = new tls.PrivateKey(`${name}-cluster-mtls-pkey`, {
-  algorithm: "RSA",
-  rsaBits: 2048,
+  algorithm: "ECDSA",
+  ecdsaCurve: "P224",
+  rsaBits: 4096,
 });
 
 const kongClusterCert = new tls.SelfSignedCert(`${name}-cluster-mtls-cert`, {
@@ -342,7 +343,7 @@ const secretKongClusterCert = new k8s.core.v1.Secret(`${name}-cluster-cert`, {
     },
     stringData: {
         "tls.crt": kongClusterCert.certPem,
-        "tls.key": kongClusterCert.privateKeyPem,
+        "tls.key": kongClusterKey.privateKeyPem,
     },
 }, {
     dependsOn: [
