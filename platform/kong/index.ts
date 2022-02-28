@@ -24,7 +24,7 @@ const kongSuperAdminPassword = "kong_admin";
 const kongAppSubdomain = "apps";
 const kongPortalSubdomain = "portal.kong";
 const kongManagerSubdomain = "manager.kong";
-const kongBaseDomain = "kind.arpa";
+const kongBaseDomain = "kind.home.arpa";
 
 // Kong Admin Credentials
 const kongPostgresPort = "5432";
@@ -425,6 +425,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
             ingress: {
                 annotations: {
+                    "kubernetes.io/ingress.class": "kong",
                     "konghq.com/protocols": "https",
                     "konghq.com/strip-path": "true",
                     "konghq.com/https-redirect-status-code": "301",
@@ -436,7 +437,6 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 hostname: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
                 path: "/api",
                 tls: "kong-controlplane-services-tls",
-                ingresClass: "kong",
             },
             tls: {
                 containerPort: 8444,
@@ -650,7 +650,6 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                     "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
                 },
                 hostname: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
-                ingressClass: "kong",
                 tls: "kong-controlplane-services-tls",
                 path: "/",
             },
@@ -681,13 +680,13 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
             ingress: {
                 annotations: {
-                    "konghq.com/https-redirect-status-code": "301",
+                    "kubernetes.io/ingress.class": "kong",
                     "konghq.com/protocols": "https",
                     "konghq.com/strip-path": "false",
+                    "konghq.com/https-redirect-status-code": "301",
                 },
                 enabled: true,
                 hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
-                ingressClass: "kong",
                 path: "/",
                 tls: "kong-controlplane-services-tls",
             },
@@ -711,14 +710,14 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
             ingress: {
                 annotations: {
-                    "konghq.com/https-redirect-status-code": "301",
+                    "kubernetes.io/ingress.class": "kong",
                     "konghq.com/protocols": "https",
                     "konghq.com/strip-path": "true",
+                    "konghq.com/https-redirect-status-code": "301",
                     "nginx.ingress.kubernetes.io/app-root": "/",
                 },
                 enabled: true,
                 hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
-                ingressClass: "kong",
                 path: "/api",
                 tls: "kong-controlplane-services-tls",
             },

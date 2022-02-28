@@ -38,8 +38,8 @@ git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/ko
 .Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
 ```sh
 cd platform/kong
-docker volume create worker1-containerd
-docker volume create control1-containerd
+docker volume create worker1
+docker volume create controlplane1
 kind create cluster --config ../kind/config.yml
 ```
 .Verify successful Kind deploy with:
@@ -90,7 +90,7 @@ In this post, we saw how to deploy a Kong Gateway, and how to deploy a test app 
 pulumi --stack kongpulumilabs destroy -y
 pulumi --stack kongpulumilabs stack rm -y
 kind delete cluster --name=kong
-docker volume rm worker1-containerd control1-containerd
+docker volume rm worker1 controlplane1
 ```
 ```sh
 pulumi stack export --stack kongpulumilabs | pulumi stack import --stack kongpulumilabs

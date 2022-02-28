@@ -1,6 +1,6 @@
-# docker volume create worker1-containerd
-# docker volume create control1-containerd
-# kind create cluster --config platform/kind/config.yml
+# docker volume create worker1
+# docker volume create controlplane1
+# kind create cluster --config config.yml
 
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -17,7 +17,7 @@ nodes:
     image: kindest/node:v1.23.3
     # Control-Plane Persistent image cache (optional)
     extraMounts:
-    - hostPath: /var/lib/docker/volumes/control1-containerd/_data
+    - hostPath: /var/lib/docker/volumes/controlplane1/_data
       containerPath: /var/lib/containerd
  
   # Worker Node
@@ -25,7 +25,7 @@ nodes:
     image: kindest/node:v1.23.3
     # Worker Persistent image cache (optional)
     extraMounts:
-      - hostPath: /var/lib/docker/volumes/worker1-containerd/_data
+      - hostPath: /var/lib/docker/volumes/worker1/_data
         containerPath: /var/lib/containerd
     # Attach our kind cluster to host ports 80 and 443
     extraPortMappings:
