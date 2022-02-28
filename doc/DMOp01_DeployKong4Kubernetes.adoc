@@ -83,7 +83,6 @@ pulumi config set --secret kong:license "'{}'"
 ```
 
 ==== Deploy Kong Gateway
-
 [start=8]
 . Double check kubectl context & Run Pulumi Deployment +
 ```sh
