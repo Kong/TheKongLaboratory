@@ -4,70 +4,75 @@
 === Introduction
 The quest for resilience and agility has driven us into the modern age of microservices. Bringing services to market on microservice architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
 
-In this series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate and orchestrate our infrastructure, deploy our applications, and configure kong.
+In this series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
 
 === Tools
 
-Kong Gateway is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
+*Kong Gateway* is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
 
-Pulumi is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
+*Pulumi* is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
 
-=== Guide
+==== Dependencies
 
-This article is designed for you to follow along using Kubernetes-in-Docker (kind). To start, we will check that we have all of our dependency prerequisites. +
+This article is designed for you to follow along with your Apple or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
 
-==== Dependencies:
-
-- https://code.visualstudio.com[VSCode] (Optional)
 - https://docs.docker.com/engine/reference/run[docker] (for linux) or https://www.docker.com/products/docker-desktop[docker-desktop] (for Mac)
 - https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl] (https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac])
 - https://kind.sigs.k8s.io[Kind]
 - https://helm.sh/docs/intro/install[Helm]
 - https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Pulumi]
 - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm[npm]
-- https://httpie.io/docs/cli/installation[httpie]
 - https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git client]
+- https://everything.curl.dev/get[curl client]
 
-Okay, now that our system is ready, let's grab the code and start our local kubernetes environment. +
 
-.Clone the KongPulumiLabs git repo
+==== Platform
+Okay, now that your system is ready, let's grab the code and start our local kubernetes environment. +
+
+. Clone the KongPulumiLabs git repo
 ```sh
 git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs/platform/kong
 ```
-
-.Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
+[start=2]
+. Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
 ```sh
 cd platform/kong
 docker volume create worker1
 docker volume create controlplane1
 kind create cluster --config ../kind/config.yml
 ```
-.Verify successful Kind deploy with:
+[start=3]
+. Verify successful Kind deploy with:
 ```sh
 kubectl cluster-info --context kind-kong
 ```
-Great! Now we have the code we need, and a platform to deploy it to! +
 
-.Deploy Kong with Pulumi +
-Before we can deploy our Kong Gateway, we need to install the cert-manager Helm chart. +
+==== Pulumi
 
-Export your pulumi account name
+Great! Now we have the code and a platform to deploy it to! Before we can deploy our Kong Gateway we need to initialize our Pulumi Stack. +
+
+[start=4]
+. Export your pulumi account name
 ```sh
+# Example where my account is named "usrbinkat"
 export pulumiUserName="usrbinkat"
 ```
 
-Deploy Kong Gateway, Cert Manager and Postgres +
+[start=5]
+. Deploy Kong Gateway, Cert Manager and Postgres +
 ```sh
 npm install
 pulumi stack init ${pulumiUserName}/KongPulumiLabs
 pulumi stack select KongPulumiLabs
 ```
 
-Set Configuration Variables +
+[start=6]
+. Set Configuration Variables +
 ```sh
-pulumi config set --secret kong:license
+pulumi config set --secret kong:license "'{}'"
 ```
 
+==== Deploy Kong Gateway
 Double check kubectl context & Run Pulumi Deployment +
 ```sh
 kubectl config get-contexts --output name | grep kind-kong && pulumi up -y
