@@ -49,12 +49,13 @@ kubectl cluster-info --context kind-kong
 [start=4]
 . Write Hosts File Entries
 ```sh
-export DATAPLANE_ADDRESS=127.0.0.1
+# Set ADDRESS to your public IP address if you will be using keycloak
+export ADDRESS=127.0.0.1
 cat <<EOF | sudo tee -a /etc/hosts
-${DATAPLANE_ADDRESS}  apps.kind.home.arpa
-${DATAPLANE_ADDRESS}  portal.kong.kind.home.arpa
-${DATAPLANE_ADDRESS}  manager.kong.kind.home.arpa
-${DATAPLANE_ADDRESS}  keycloak.apps.kind.home.arpa
+${ADDRESS}  apps.kind.home.arpa
+${ADDRESS}  portal.kong.kind.home.arpa
+${ADDRESS}  manager.kong.kind.home.arpa
+${ADDRESS}  keycloak.apps.kind.home.arpa
 EOF
 ```
 ==== Pulumi
