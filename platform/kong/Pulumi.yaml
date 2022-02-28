@@ -1,0 +1,4 @@
+# https://github.com/Kong/KongPulumiLabs
+name: kind-kong
+description: Basic Deployment of Kong with Pulumi on Kind
+runtime: nodejs
