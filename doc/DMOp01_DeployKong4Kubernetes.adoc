@@ -38,7 +38,7 @@ git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/ko
 ```sh
 docker volume create worker1
 docker volume create controlplane1
-kind create cluster --config ../kind/config.yml
+kind create cluster --config hack/kind/config.yml
 ```
 [start=3]
 . Verify successful Kind deploy with:
