@@ -36,7 +36,6 @@ git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/ko
 [start=2]
 . Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
 ```sh
-cd platform/kong
 docker volume create worker1
 docker volume create controlplane1
 kind create cluster --config ../kind/config.yml
