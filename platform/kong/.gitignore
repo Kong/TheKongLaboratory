@@ -1,8 +1,0 @@
-bin/
-/bin/
-*/bin/
-node_modules/
-/node_modules/
-*/node_modules/
-*/Pulumi.*.yaml
-Pulumi.*.yaml
