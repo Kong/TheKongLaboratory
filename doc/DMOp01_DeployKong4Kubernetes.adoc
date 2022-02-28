@@ -97,12 +97,8 @@ pulumi --stack kongpulumilabs stack rm -y
 kind delete cluster --name=kong
 docker volume rm worker1 controlplane1
 ```
-```sh
-pulumi stack export --stack kongpulumilabs | pulumi stack import --stack kongpulumilabs
-pulumi refresh --stack kongpulumilabs -y
-```
 
-Teasers for future:
+=== Future Work
 
  Configure Kong Plugins via Pulumi
  Rate Limiting
