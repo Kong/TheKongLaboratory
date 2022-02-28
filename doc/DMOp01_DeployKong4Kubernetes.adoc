@@ -59,20 +59,20 @@ EOF
 ```
 ==== Pulumi
 
-Great! Now we have the code and a platform to deploy it to! Before we can deploy our Kong Gateway we need to initialize our Pulumi Stack. +
+Great! Now we have the code and a platform to deploy it to! Before we can deploy our Kong Gateway we need to setup Pulumi & initialize our Pulumi Stack. +
 
 [start=5]
-. Export your pulumi account name
+. Pulumi Login
 ```sh
-# Example where my account is named "usrbinkat"
-export pulumiUserName="usrbinkat"
+# Run pulumi login --help for more state backend and login information
+pulumi login --local
 ```
 
 [start=6]
 . Deploy Kong Gateway, Cert Manager and Postgres +
 ```sh
 npm install
-pulumi stack init ${pulumiUserName}/KongPulumiLabs
+pulumi stack init KongPulumiLabs
 pulumi stack select KongPulumiLabs
 ```
 
