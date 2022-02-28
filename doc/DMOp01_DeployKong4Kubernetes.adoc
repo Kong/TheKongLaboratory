@@ -31,7 +31,7 @@ Okay, now that your system is ready, let's grab the code and start our local kub
 
 . Clone the KongPulumiLabs git repo
 ```sh
-git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs/platform/kong
+git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs
 ```
 [start=2]
 . Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
