@@ -32,7 +32,7 @@ Okay, now that our system is ready, let's grab the code and start our local kube
 
 .Clone the KongPulumiLabs git repo
 ```sh
-git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs
+git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && cd ~/kongpulumilabs/platform/kong
 ```
 
 .Start Kubernetes-in-Docker (https://kind.sigs.k8s.io[kind]) +
@@ -44,7 +44,7 @@ kind create cluster --config ../kind/config.yml
 ```
 .Verify successful Kind deploy with:
 ```sh
-kubectl cluster-info --context kind-kongpulumilabs
+kubectl cluster-info --context kind-kong
 ```
 Great! Now we have the code we need, and a platform to deploy it to! +
 
@@ -70,8 +70,7 @@ pulumi config set --secret kong:license
 
 Double check kubectl context & Run Pulumi Deployment +
 ```sh
-kubectl config get-contexts
-pulumi up -y
+kubectl config get-contexts --output name | grep kind-kong && pulumi up -y
 ```
 
 Deploy Test Apps +
@@ -90,7 +89,7 @@ In this post, we saw how to deploy a Kong Gateway, and how to deploy a test app 
 ```sh
 pulumi --stack kongpulumilabs destroy -y
 pulumi --stack kongpulumilabs stack rm -y
-kind delete cluster --name=kongpulumilabs
+kind delete cluster --name=kong
 docker volume rm worker1-containerd control1-containerd
 ```
 ```sh

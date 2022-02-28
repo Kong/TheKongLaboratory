@@ -4,7 +4,7 @@
 
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-name: kongpulumilabs
+name: kong
 
 networking:
   apiServerAddress: "0.0.0.0"
@@ -37,14 +37,6 @@ nodes:
       protocol: TCP
       hostPort: 443
       containerPort: 443
-    - listenAddress: "0.0.0.0"
-      protocol: TCP
-      hostPort: 8080
-      containerPort: 8080
-    - listenAddress: "0.0.0.0"
-      protocol: TCP
-      hostPort: 8443
-      containerPort: 8443
     # We are going to add an ingress label to this node
     kubeadmConfigPatches:
     - |

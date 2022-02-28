@@ -11,7 +11,7 @@ const config = new pulumi.Config("kong");
 const name = "kong";
 
 // KubeConfig Context
-const kubeConfigContext = "kind-kongpulumilabs";
+const kubeConfigContext = "kind-kong";
 
 // Kong Session Config
 const secretKongSessionConfigSalt = "this-is-a-random-session-config-salt";
@@ -37,7 +37,7 @@ const kongPostgresHost = "postgres-postgresql.kong.svc.cluster.local";
 const kongEnterpriseLicense = config.requireSecret("license");
 
 // Kong plugins
-const kongPlugins = "bundled";
+const kongPlugins = "bundled,openid-connect";
 const kongLogLevel = "debug";
 
 // Kong Image Tag
@@ -135,7 +135,7 @@ const rootIssuer = new k8s.apiextensions.CustomResource("issuerRoot", {
     apiVersion: "cert-manager.io/v1",
     kind: "ClusterIssuer",
     metadata: {
-        name: "certman-clusterissuer-selfsigned-issuer",
+        name: "certman-clusterissuer-selfsigned-root-ca",
         namespace: nsNameCertManager,
     },
     spec: {
@@ -155,20 +155,20 @@ const rootSelfSignedCa = new k8s.apiextensions.CustomResource("selfSignCertifica
         namespace: nsNameCertManager,
     },
     spec: {
+        isCA: true,
         commonName: "certman-clusterissuer-selfsigned-issuer-ca",
         secretName: "certman-clusterissuer-selfsigned-issuer-ca",
         privateKey: {
-            algorithm: "ECDSA",
-            size: 256, // supported values: 256, 384, 521
+            algorithm: "RSA",
+            size: 2048, // supported values: 256, 384, 521
         },
         issuerRef: {
-            name: "certman-clusterissuer-selfsigned-issuer",
+            name: "certman-clusterissuer-selfsigned-root-ca",
             kind: "ClusterIssuer",
             group: "cert-manager.io",
         },
         renewBefore: "1296000s", // 1296000 is 15 days in seconds
         durationSeconds: "31536000s", // 31536000 is 1 year in seconds
-        isCA: true,
     },
 },{
     provider: kubeconfig,
@@ -281,25 +281,26 @@ const kongServicesTls = new k8s.apiextensions.CustomResource("kong-controlplane-
     apiVersion: "cert-manager.io/v1",
     kind: "Certificate",
     metadata: {
-        name: "kong-controlplane-services-tls",
+        name: kongBaseDomain,
         namespace: nsNameKong,
     },
     spec: {
         secretName: "kong-controlplane-services-tls",
+        commonName: pulumi.interpolate`${kongBaseDomain}`,
+        dnsNames: [
+            pulumi.interpolate`${kongBaseDomain}`,
+            pulumi.interpolate`${kongAppSubdomain}.${kongBaseDomain}`,
+            pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+            pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
+            pulumi.interpolate`*.${kongBaseDomain}`,
+        ],
+        renewBefore: "360h",
+        duration: "2160h",
+        isCa: false,
         issuerRef: {
             name: "certman-selfsigned-issuer",
             kind: "ClusterIssuer",
         },
-        commonName: pulumi.interpolate`${kongBaseDomain}`,
-        dnsNames: [
-            pulumi.interpolate`*.${kongBaseDomain}`,
-            pulumi.interpolate`proxy.${kongBaseDomain}`,
-            pulumi.interpolate`${kongAppSubdomain}.${kongBaseDomain}`,
-            pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
-        ],
-        renewBefore: "360h",
-        duration: "8760h",
-        isCa: false,
     },
 },{
     provider: kubeconfig,
@@ -309,19 +310,14 @@ const kongServicesTls = new k8s.apiextensions.CustomResource("kong-controlplane-
 // TODO: Activate Cluster MTLS Certificate
 //// Issue certificate for kong cluster mtls
 const kongClusterKey = new tls.PrivateKey(`${name}-cluster-mtls-pkey`, {
-  algorithm: "ECDSA",
-  ecdsaCurve: "P224",
-  rsaBits: 4096,
+  algorithm: "RSA",
+  rsaBits: 2048,
 });
 
 const kongClusterCert = new tls.SelfSignedCert(`${name}-cluster-mtls-cert`, {
   privateKeyPem: kongClusterKey.privateKeyPem,
   allowedUses: [
-    "keyEncipherment",
-    "digitalSignature",
     "serverAuth",
-    "cert_signing",
-    "crl_signing",
   ],
   keyAlgorithm: kongClusterKey.algorithm,
   subjects: [{ commonName: 'kong_clustering' }],
@@ -425,17 +421,24 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 "konghq.com/protocol": "https",
             },
             enabled: true,
+            http: {
+                enabled: false,
+            },
             ingress: {
                 annotations: {
                     "konghq.com/protocols": "https",
                     "konghq.com/strip-path": "true",
                     "konghq.com/https-redirect-status-code": "301",
+                    "kubernetes.io/ingress.class": "kong",
+                    "nginx.ingress.kubernetes.io/app-root": "/",
+                    "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
+                    "nginx.ingress.kubernetes.io/permanent-redirect-code": "301",
                 },
                 enabled: true,
                 hostname: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
                 path: "/api",
                 tls: "kong-controlplane-services-tls",
-                ingresClass: "kong",
+                //ingresClass: "kong",
             },
             tls: {
                 containerPort: 8444,
@@ -459,7 +462,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 servicePort: 8005,
             },
         },
-        clusterTelemetry: {
+        clustertelemetry: {
             enabled: true,
             tls: {
                 containerPort: 8006,
@@ -490,12 +493,12 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 enabled: false,
             },
             vitals: {
-                enabled: false,
+                enabled: true,
             },
         },
         env: {
             role: "control_plane",
-            //plugins: pulumi.interpolate`"${kongPlugins}"`, // TODO: solve for plugin list syntax
+            plugins: pulumi.interpolate`${kongPlugins}`, // TODO: solve for plugin list syntax
             log_level: kongLogLevel,
             password: {
                 valueFrom: {
@@ -513,26 +516,27 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             proxy_stream_access_log: "/dev/stdout",
             proxy_stream_error_log: "/dev/stdout",
             lua_package_path: "/opt/?.lua;;",
-            lua_ssl_trusted_certificate: "/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt",
+            //lua_ssl_trusted_certificate: "/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt",
+            lua_ssl_trusted_certificate: "/etc/ssl/certs/ca-certificates.crt",
             proxy_access_log: "/dev/stdout",
             proxy_error_log: "/dev/stdout",
             nginx_worker_processes: "2",
             prefix: "/kong_prefix/",
-            smtp_mock: "on",
+            //smtp_mock: "on",
             vitals: true,
 
             // START Kong Portal Configuration //
             portal: true,
             portal_api_error_log: "/dev/stdout",
             portal_api_access_log: "/dev/stdout",
-            portal_api_uri: pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/api`,
+            portal_api_uri: pulumi.interpolate`https://${kongPortalSubdomain}.${kongBaseDomain}/api`,
             portal_auth: "basic-auth",
             portal_cors_origins: '*',
             portal_gui_access_log: "/dev/stdout",
             portal_gui_error_log: "/dev/stdout",
-            portal_gui_host: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
+            portal_gui_host: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
             portal_gui_protocol: "https",
-            portal_gui_url: pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/`,
+            portal_gui_url: pulumi.interpolate`https://${kongPortalSubdomain}.${kongBaseDomain}/`,
             portal_session_conf: {
               valueFrom: {
                 secretKeyRef: {
@@ -619,7 +623,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             //// END Cluster MTLS Configuration //
         },
         image: {
-            repository: "docker.io/kong/kong-gateway",
+            repository: "kong/kong-gateway",
             tag: kongImageTag,
         },
         ingressController: {
@@ -645,8 +649,12 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
             ingress: {
                 enabled: true,
-                ingressClass: "kong",
+                annotations: {
+                    "kubernetes.io/ingress.class": "kong",
+                    "nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
+                },
                 hostname: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
+                //ingressClass: "kong",
                 tls: "kong-controlplane-services-tls",
                 path: "/",
             },
@@ -676,14 +684,15 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 servicePort: 8003,
             },
             ingress: {
-                enabled: true,
-                ingressClass: "kong",
                 annotations: {
                     "konghq.com/https-redirect-status-code": "301",
                     "konghq.com/protocols": "https",
-                    "konghq.com/strip-path": "true",
+                    "konghq.com/strip-path": "false",
+                    "kubernetes.io/ingress.class": "kong",
                 },
+                enabled: true,
                 hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+                //ingressClass: "kong",
                 path: "/",
                 tls: "kong-controlplane-services-tls",
             },
@@ -706,14 +715,16 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
                 enabled: false,
             },
             ingress: {
-                enabled: true,
-                ingressClass: "kong",
                 annotations: {
                     "konghq.com/https-redirect-status-code": "301",
                     "konghq.com/protocols": "https",
                     "konghq.com/strip-path": "true",
+                    "kubernetes.io/ingress.class": "kong",
+                    "nginx.ingress.kubernetes.io/app-root": "/",
                 },
+                enabled: true,
                 hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+                //ingressClass: "kong",
                 path: "/api",
                 tls: "kong-controlplane-services-tls",
             },
@@ -743,7 +754,7 @@ const kongControlPlane = new k8s.helm.v3.Release("controlplane", {
             },
             tls: {
                 containerPort: 8543,
-                enabled: true,
+                enabled: false,
             },
         },
         migrations: {
@@ -785,7 +796,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
     values: {
         admin: {enabled: false},
         affinity: {
-            podAffinity: {
+            podAntiAffinity: {
                 preferredDuringSchedulingIgnoredDuringExecution: [
                     {
                         podAffinityTerm: {
@@ -821,16 +832,17 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
         env: {
             cluster_cert: "/etc/secrets/kong-cluster-cert/tls.crt",
             cluster_cert_key: "/etc/secrets/kong-cluster-cert/tls.key",
-            cluster_control_plane: "controlplane-kong-cluster:8005", // TODO: variablize controlplane-kong-clustertelemetry
-            cluster_telemetry_endpoint: "controlplane-kong-clustertelemetry:8006", // TODO: variablize controlplane-kong-clustertelemetry
-            ssl_cert_key: "/etc/secrets/kong-controlplane-services-tls/tls.key",
-            ssl_cert: "/etc/secrets/kong-controlplane-services-tls/tls.crt",
+            cluster_control_plane: "controlplane-kong-cluster.kong.svc.cluster.local:8005", // TODO: variablize controlplane-kong-cluster dns name
+            cluster_telemetry_endpoint: "controlplane-kong-clustertelemetry.kong.svc.cluster.local:8006", // TODO: variablize controlplane-kong-clustertelemetry
+            //ssl_cert_key: "/etc/secrets/kong-controlplane-services-tls/tls.key",
+            //ssl_cert: "/etc/secrets/kong-controlplane-services-tls/tls.crt",
             database: "off",
             log_level: kongLogLevel,
             lua_package_path: "/opt/?.lua;;",
-            lua_ssl_trusted_certificate: "/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt",
+            //lua_ssl_trusted_certificate: "/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt",
+            lua_ssl_trusted_certificate: "/etc/ssl/certs/ca-certificates.crt",
             nginx_worker_processes: "2",
-            //plugins: pulumi.interpolate`"${kongPlugins}"`, // TODO: solve for plugin list syntax
+            plugins: pulumi.interpolate`${kongPlugins}`, // TODO: solve for plugin list syntax
             prefix: "/kong_prefix/",
             proxy_access_log: "/dev/stdout",
             proxy_error_log: "/dev/stdout",
@@ -840,7 +852,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
             role: "data_plane",
         },
         image: {
-            repository: "docker.io/kong/kong-gateway",
+            repository: "kong/kong-gateway",
             tag: kongImageTag,
         },
         ingressController: {enabled: false, installCRDs: false},
@@ -851,10 +863,14 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
         portalapi: {enabled: false},
         proxy: {
             enabled: true,
+            annotations: {
+                "prometheus.io/port": "9542",
+                "prometheus.io/scrape": "true",
+            },
             http: {
                 containerPort: 8080,
                 enabled: true,
-                hostport: 80,
+                hostPort: 80,
             },
             ingress: {enabled: false},
             labels: {
@@ -863,7 +879,7 @@ const kongDataPlane = new k8s.helm.v3.Release("dataplane", {
             tls: {
                 containerPort: 8443,
                 enabled: true,
-                hostport: 443,
+                hostPort: 443,
             },
             type: "ClusterIP",
         },
