@@ -1,3 +1,5 @@
+// TODO: shasum secrets & label deployment to trigger pod rotation on secret updates
+//       - ref: https://www.npmjs.com/package/shasum-object
 import * as tls from '@pulumi/tls';
 import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';

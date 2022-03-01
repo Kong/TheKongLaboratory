@@ -1,0 +1,153 @@
+:showtitle:
+:doctitle:  Kong on Kubernetes with Pulumi
+
+== About
+=== Why?
+The quest for resilience and agility has driven us into the modern age of microservices. Bringing services to market on microservice architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
+
+In this series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
+
+=== Tools
+
+*Kong Gateway* is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
+
+*Pulumi* is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
+
+== Setup
+=== Dependencies
+
+This article is designed for you to follow along with your Apple or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
+
+[cols="1,1"]
+|===
+| *Dependency*, | *Installation Docs*
+
+| https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl]
+| https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac]
+
+| https://www.docker.com/[Docker]
+| https://docs.docker.com/engine/install/#server[Linux] / https://docs.docker.com/desktop/mac/install/[Mac]
+
+| https://kind.sigs.k8s.io[Kind]
+| https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries[Linux] / https://kind.sigs.k8s.io/docs/user/quick-start/#installing-with-a-package-manager[Mac]
+
+| https://helm.sh/docs/intro/install[Helm]
+| https://helm.sh/docs/intro/install/#from-script[Linux] / https://helm.sh/docs/intro/install/#from-homebrew-macos[Mac]
+
+| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Pulumi]
+| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Linux] / https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Mac]
+
+| https://nodejs.org/[npm]
+| https://github.com/nodesource/distributions#installation-instructions[Linux] / https://nodejs.org/en/download/[Mac]
+
+| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git client]
+| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[Linux] / https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[Mac]
+
+| https://everything.curl.dev/get[curl client]
+| https://everything.curl.dev/get/linux[Linux] / https://everything.curl.dev/get/macos[Mac]
+|===
+
+
+
+=== Platform: https://kind.sigs.k8s.io[Kind] Kubernetes
+Okay, now that your system is ready, let's grab the code and start our local kubernetes environment. In the next 3 steps we will: +
+
+* [*] Configure `/etc/hosts` to resolve our domain names to our host IP.
+* [*] Clone the demo repo codebase.
+* [*] Start a local Kubernetes kind cluster
+
+[start=1]
+. Write Hosts File Entries
+```sh
+# Set ADDRESS to your public IP address if you plan to use keycloak
+
+export ADDRESS=127.0.0.1
+cat <<EOF | sudo tee -a /etc/hosts
+${ADDRESS}  apps.kind.home.arpa
+${ADDRESS}  portal.kong.kind.home.arpa
+${ADDRESS}  manager.kong.kind.home.arpa
+${ADDRESS}  keycloak.apps.kind.home.arpa
+EOF
+```
+
+[start=2]
+. Clone the KongPulumiLabs git repo
+```sh
+git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && \
+cd ~/kongpulumilabs
+```
+[start=3]
+. Start Kubernetes-in-Docker kind +
+```sh
+# Create docker volumes for persistent container image storage
+docker volume create worker1
+docker volume create controlplane1
+
+# Start Kind & Verify Kubeconfig Context
+kind create cluster --config hack/kind/config.yml
+```
+
+==== Pulumi Infrastructure as Code
+
+Great! Now we have the code and a platform to deploy to! Before we can deploy our Kong Gateway we need to setup Pulumi & initialize our Pulumi Stack. +
+
+[start=4]
+. Pulumi local state provider login
+```sh
+# Set a Pulumi local state login password
+export PULUMI_CONFIG_PASSPHRASE=mypassword
+
+# Run pulumi login --help for more state backend and login information
+pulumi login --local
+
+# Download npm packages for Pulumi typescript IaC
+npm install
+```
+
+[start=5]
+. Initialize & Select Pulumi Stack
+```sh
+pulumi stack init kongpulumilabs
+pulumi stack select kongpulumilabs
+```
+
+[start=6]
+. Set Configuration Variables +
+```sh
+# Set an empty Kong Enterprise License for now
+pulumi config set --secret kong:license "'{}'"
+```
+
+[start=7]
+. Deploy Kong Gateway Stack
+```sh
+pulumi up -y
+```
+
+. Now it's time to open up the Kong Manger UI !! +
+>> https://manager.kong.kind.home.arpa/
+
+=== Conclusions
+Now you have deployed a working Kong Gateway with Pulumi. From here you can continue with configuring kong manager and kong plugins, or you can start using the Kong Ingress Controller to publish services on your kind cluster via Kong.
+
+See the following sub-modules for more examples on how to use this platform: +
+
+* [ ] Sample App: Httpbin
+* [ ] Sample App: Podinfo
+* [ ] Sample Auth: Keycloak
+* [ ] Sample Auth: JWT Auth
+* [ ] Sample Plugin: Rate Limiting
+* [ ] Kong Ingress Controller
+* [ ] Kong Plugins
+* [ ] Kong Manager
+* [ ] Kong Developer Portal
+* [ ] Kong Consumers
+* [ ] Kong Upstreams
+
+=== Cleanup
+```sh
+pulumi --stack kongpulumilabs destroy -y
+pulumi --stack kongpulumilabs stack rm -y
+kind delete cluster --name=kong
+docker volume rm worker1 controlplane1
+```
