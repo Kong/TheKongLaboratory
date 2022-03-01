@@ -1,0 +1,39 @@
+:showtitle:
+:doctitle: MacOS Prerequisites
+
+== !! Coming Soon !!
+=== Getting Started
+
+Here's a quick start to make sure your MacOS system has the necessary dependencies for this lab.
+
+[cols="1,1"]
+|===
+| *Dependency* | *Installation Docs*
+
+| https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl]
+| https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[MacOS]
+
+| https://www.docker.com/[Docker]
+| https://docs.docker.com/desktop/mac/install/[MacOS]
+
+| https://kind.sigs.k8s.io[Kind]
+| https://kind.sigs.k8s.io/docs/user/quick-start/#installing-with-a-package-manager[MacOS]
+
+| https://helm.sh/docs/intro/install[Helm]
+| https://helm.sh/docs/intro/install/#from-homebrew-macos[MacOS]
+
+| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Pulumi]
+| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[MacOS]
+
+| https://nodejs.org/[npm]
+| https://nodejs.org/en/download/[MacOS]
+
+| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git client]
+| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[MacOS]
+
+| https://everything.curl.dev/get[curl client]
+| https://everything.curl.dev/get/macos[MacOS]
+|===
+
+=== Steps:
+Coming Soon!

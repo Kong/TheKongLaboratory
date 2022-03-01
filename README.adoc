@@ -20,7 +20,7 @@ This article is designed for you to follow along with your Apple or Linux laptop
 
 [cols="1,1"]
 |===
-| *Dependency*, | *Installation Docs*
+| *Dependency* | *Installation Docs*
 
 | https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl]
 | https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac]
