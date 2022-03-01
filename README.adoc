@@ -5,7 +5,7 @@
 === Why?
 The quest for resilience and agility has driven us into the modern age of microservices. Bringing services to market on microservice architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
 
-In this series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
+In this hands on series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
 
 === Tools
 
