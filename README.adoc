@@ -58,6 +58,8 @@ In the next 3 steps we will: +
 * [*] Clone the demo repo codebase.
 * [*] Start a local Kubernetes kind cluster
 
+***
+
 =========
 
 [start=1]
@@ -88,6 +90,8 @@ docker volume create worker1
 docker volume create controlplane1
 ```
 =========
+
+***
 
 ==== Pulumi Infrastructure as Code
 
@@ -125,6 +129,8 @@ pulumi config set kong:enterprise false
 ```
 =========
 
+***
+
 ==== Deploy the Lab Platform
 
 Now, with your prep work done, it is time to start your Kind cluster and deploy Kong to it!
@@ -144,6 +150,8 @@ pulumi up -y
 . Go ahead and open up the Kong Manger UI !! +
 >> https://manager.kong.kind.home.arpa/
 =========
+
+***
 
 === Conclusion
 Now you have deployed a working Kong Gateway with Pulumi. From here you can continue with configuring kong manager and kong plugins, or you can start using the Kong Ingress Controller to publish services on your kind cluster via Kong.
