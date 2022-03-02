@@ -3,7 +3,7 @@
 
 == About
 === Why?
-The quest for resilience and agility has driven us into the modern age of microservices. Bringing services to market on microservice architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
+The quest for resilience and agility has driven us into the modern age of micro-services. Bringing services to market on a micro service architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
 
 In this hands on series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
 
@@ -71,10 +71,10 @@ EOF
 ```
 
 [start=2]
-. Clone the KongPulumiLabs git repo
+. Clone the TheKongLaboratory git repo
 ```sh
-git clone https://github.com/kong/KongPulumiLabs.git ~/kongpulumilabs && \
-cd ~/kongpulumilabs
+git clone https://github.com/kong/TheKongLaboratory.git ~/thekonglaboratory && \
+cd ~/thekonglaboratory
 ```
 [start=3]
 . Start Kubernetes-in-Docker kind +
@@ -107,8 +107,8 @@ npm install
 [start=5]
 . Initialize & Select Pulumi Stack
 ```sh
-pulumi stack init kongpulumilabs
-pulumi stack select kongpulumilabs
+pulumi stack init thekonglaboratory
+pulumi stack select thekonglaboratory
 ```
 
 [start=6]
@@ -132,22 +132,24 @@ Now you have deployed a working Kong Gateway with Pulumi. From here you can cont
 
 See the following sub-modules for more examples on how to use this platform: +
 
-* [ ] Sample App: Httpbin
-* [ ] Sample App: Podinfo
+* [ ] Sample Apps
 * [ ] Sample Auth: Keycloak
-* [ ] Sample Auth: JWT Auth
+* [ ] Sample Plugin: JWT Auth
 * [ ] Sample Plugin: Rate Limiting
+* [ ] Sample Plugin: OpenPolicyAgent
 * [ ] Kong Ingress Controller
 * [ ] Kong Plugins
 * [ ] Kong Manager
 * [ ] Kong Developer Portal
 * [ ] Kong Consumers
 * [ ] Kong Upstreams
+* [ ] https://github.com/pulumi/pulumi-kong[Kong Resource Provider]
+* [ ] Publish Kong API Gateway via https://github.com/inlets/inletsctl[Inlets Operator]
 
 === Cleanup
 ```sh
-pulumi --stack kongpulumilabs destroy -y
-pulumi --stack kongpulumilabs stack rm -y
+pulumi --stack thekonglaboratory destroy -y
+pulumi --stack thekonglaboratory stack rm -y
 kind delete cluster --name=kong
 docker volume rm worker1 controlplane1
 ```

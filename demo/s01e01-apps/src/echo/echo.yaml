@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-server
+  labels:
+    app: echo-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echo-server
+  template:
+    metadata:
+      labels:
+        app: echo-server
+    spec:
+      containers:
+      - name: echo-server
+        image: python:3.8
+        command:
+        - python3
+        args:
+        - /data/script/app.py
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: script-volume
+          mountPath: /data/script
+      volumes:
+      - name: script-volume
+        configMap:
+          name: echo-server-script
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-server
+spec:
+  rules:
+  - host: echo-server.k3s.jack.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: echo-server
+            port:
+              number: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-server
+  labels:
+    app: echo-server
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: echo-server
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echo-server-script
+data:
+  app.py: |
+    #!/usr/bin/env python3
+    # A web server to echo back a request's headers and data.
+    #
+    # Usage: ./webserver
+    #        ./webserver 0.0.0.0:5000
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from sys import argv
+    BIND_HOST = '0.0.0.0'
+    PORT = 8080
+    class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.write_response(self.path, b'GOOD')
+        def do_POST(self):
+            content_length = int(self.headers.get('content-length', 0))
+            body = self.rfile.read(content_length)
+            self.write_response(self.path, body)
+        def write_response(self, path, content):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(content)
+            self.wfile.write(b'\n')
+            self.wfile.write(bytes('PATH: {}'.format(path), encoding='utf-8'))
+            self.wfile.write(b'\n')
+            self.wfile.write(bytes('HEADERS:\n{}'.format(self.headers), encoding="utf-8"))
+            print(self.headers)
+            print(content.decode('utf-8'))
+    if len(argv) > 1:
+        arg = argv[1].split(':')
+        BIND_HOST = arg[0]
+        PORT = int(arg[1])
+    print(f'Listening on http://{BIND_HOST}:{PORT}\n')
+    httpd = HTTPServer((BIND_HOST, PORT), SimpleHTTPRequestHandler)
+    httpd.serve_forever()
