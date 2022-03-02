@@ -13,7 +13,8 @@ In this hands on series we will dive into using both Kong API Gateway for servic
 
 *Pulumi* is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
 
-== Setup
+***
+
 === Dependencies
 
 This article is designed for you to follow along with your Apple or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
