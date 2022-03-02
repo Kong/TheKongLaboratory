@@ -49,12 +49,16 @@ This article is designed for you to follow along with your Apple or Linux laptop
 
 
 
-=== Platform: https://kind.sigs.k8s.io[Kind] Kubernetes
-Okay, now that your system is ready, let's grab the code and start our local kubernetes environment. In the next 3 steps we will: +
+=== Host Setup
+Okay, now that you have your dependencies, let's grab the code and get our system ready to build the lab platform. +
+ +
+In the next 3 steps we will: +
 
 * [*] Configure `/etc/hosts` to resolve our domain names to our host IP.
 * [*] Clone the demo repo codebase.
 * [*] Start a local Kubernetes kind cluster
+
+=========
 
 [start=1]
 . Write Hosts File Entries
@@ -82,15 +86,14 @@ cd ~/thekonglaboratory
 # Create docker volumes for persistent container image storage
 docker volume create worker1
 docker volume create controlplane1
-
-# Start Kind & Verify Kubeconfig Context
-kind create cluster --config hack/kind/config.yml
 ```
+=========
 
 ==== Pulumi Infrastructure as Code
 
 Great! Now we have the code and a platform to deploy to! Before we can deploy our Kong Gateway we need to setup Pulumi & initialize our Pulumi Stack. +
 
+=========
 [start=4]
 . Pulumi local state provider login
 ```sh
@@ -99,14 +102,14 @@ export PULUMI_CONFIG_PASSPHRASE=mypassword
 
 # Run pulumi login --help for more state backend and login information
 pulumi login --local
-
-# Download npm packages for Pulumi typescript IaC
-npm install
 ```
 
 [start=5]
 . Initialize & Select Pulumi Stack
 ```sh
+# Download npm packages for Pulumi typescript IaC
+npm install
+
 pulumi stack init thekonglaboratory
 pulumi stack select thekonglaboratory
 ```
@@ -116,40 +119,70 @@ pulumi stack select thekonglaboratory
 ```sh
 # Set an empty Kong Enterprise License for now
 pulumi config set --secret kong:license "'{}'"
-```
 
+# NOTE: Set enterprise to true if deploying with an enterprise license
+pulumi config set kong:enterprise false
+```
+=========
+
+==== Deploy the Lab Platform
+
+Now, with your prep work done, it is time to start your Kind cluster and deploy Kong to it!
+
+=========
 [start=7]
 . Deploy Kong Gateway Stack
 ```sh
+# Start Kind Kubernetes Cluster
+clear; kind create cluster --config hack/kind/config.yml
+
+# Pulumi Deploy Kong Gateway & Dependencies
 pulumi up -y
 ```
 
-. Now it's time to open up the Kong Manger UI !! +
+[start=8]
+. Go ahead and open up the Kong Manger UI !! +
 >> https://manager.kong.kind.home.arpa/
+=========
 
-=== Conclusions
+=== Conclusion
 Now you have deployed a working Kong Gateway with Pulumi. From here you can continue with configuring kong manager and kong plugins, or you can start using the Kong Ingress Controller to publish services on your kind cluster via Kong.
 
+***
+
+=== Next Steps!
 See the following sub-modules for more examples on how to use this platform: +
 
-* [ ] Sample Apps
-* [ ] Sample Auth: Keycloak
+* [ ] Sample Apps & Kong Ingress Controller
+* [ ] Sample Plugin: MTLS
 * [ ] Sample Plugin: JWT Auth
 * [ ] Sample Plugin: Rate Limiting
 * [ ] Sample Plugin: OpenPolicyAgent
-* [ ] Kong Ingress Controller
-* [ ] Kong Plugins
-* [ ] Kong Manager
-* [ ] Kong Developer Portal
+* [ ] Sample Auth: Keycloak
 * [ ] Kong Consumers
 * [ ] Kong Upstreams
+* [ ] Kong Manager
+* [ ] Kong Developer Portal
 * [ ] https://github.com/pulumi/pulumi-kong[Kong Resource Provider]
 * [ ] Publish Kong API Gateway via https://github.com/inlets/inletsctl[Inlets Operator]
 
+***
+
 === Cleanup
+When you are finished with your local deployment you can destroy your kong deployment, delete the cluster, and clean up the docker volumes with the following commands+
+
+=========
 ```sh
+# Unlock your local secret store
+cd ~/thekonglaboratory
+export PULUMI_CONFIG_PASSPHRASE=mypassword
+
+# Teardown Kong Deployment & Destroy Kind Cluster
 pulumi --stack thekonglaboratory destroy -y
-pulumi --stack thekonglaboratory stack rm -y
 kind delete cluster --name=kong
+
+# Remove Pulumi Stack and Delete cached image store
+pulumi --stack thekonglaboratory stack rm -y
 docker volume rm worker1 controlplane1
 ```
+=========

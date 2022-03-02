@@ -5,7 +5,12 @@ import * as pulumi from '@pulumi/pulumi';
 import * as k8s from '@pulumi/kubernetes';
 import * as certmanager from '@pulumi/kubernetes-cert-manager';
 import {env} from 'process';
-const config = new pulumi.Config('kong');
+
+interface Data {
+  enterprise: boolean;
+}
+// Kong Configuration //
+const kongConfig = new pulumi.Config('kong');
 
 // Variables
 const name = 'kong';
@@ -34,14 +39,17 @@ const kongPostgresAdminPassword = 'kong';
 const kongPostgresReplicationPassword = 'kong';
 const kongPostgresDatabase = 'kong';
 const kongPostgresHost = 'postgres-postgresql.kong.svc.cluster.local';
-const kongEnterpriseLicense = config.requireSecret('license');
+const kongEnterpriseLicense = kongConfig.requireSecret('license');
+
+// Additional Kong Ingress Controller(s) Boolean
+const kongConfigEntitlement = (kongConfig.getObject<Data>('enterprise'));
 
 // Kong plugins
 const kongPlugins = 'bundled,openid-connect';
 const kongLogLevel = 'debug';
 
 // Kong Image Tags
-const kongImageTag = '2.7';
+const kongImageTag = '2.8';
 const kongIngressControllerImageTag = '2.2';
 
 // Kong Gateway Namespace
@@ -306,6 +314,7 @@ const kongServicesTls = new k8s.apiextensions.CustomResource(
 );
 
 // Issue Certificate for Kong Admin Services
+// eslint-disable-next-line no-unused-vars
 const kongAppsTls = new k8s.apiextensions.CustomResource(
     'kong-proxy-tls',
     {
@@ -532,7 +541,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
         enabled: true,
       },
       rbac: {
-        enabled: true,
+        enabled: kongEnterpriseLicense,
         admin_api_auth: 'basic-auth',
         admin_gui_auth_conf_secret: 'kong-session-config',
         session_conf_secret: 'kong-session-config',
@@ -955,10 +964,10 @@ const kongDataPlane = new k8s.helm.v3.Release(
 
 // Kong Ingress Controller - Ingress Class Default //
 // eslint-disable-next-line no-unused-vars
-const kongIngressControllerInternal = new k8s.helm.v3.Release(
-    'ingress-controller-internal',
+const kongIngressControllerDefault = new k8s.helm.v3.Release(
+    'ingress-controller-default',
     {
-      name: 'controller-internal',
+      name: 'controller-default',
       chart: 'kong',
       skipCrds: true,
       namespace: nsNameKong,
@@ -1014,66 +1023,71 @@ const kongIngressControllerInternal = new k8s.helm.v3.Release(
     },
 );
 
-// Kong Ingress Controller - Ingress Class Public //
-// eslint-disable-next-line no-unused-vars
-const kongIngressControllerPublic = new k8s.helm.v3.Release(
-    'ingress-controller-public',
-    {
-      name: 'controller-public',
-      chart: 'kong',
-      skipCrds: true,
-      namespace: nsNameKong,
-      repositoryOpts: {repo: 'https://charts.konghq.com/'},
-      values: {
-        deployment: {
-          kong: {
-            enabled: false,
+// Kong Entitlements //
+if (kongConfigEntitlement) {
+  // Kong Ingress Controller - Ingress Class Public //
+  // eslint-disable-next-line no-unused-vars
+  const kongIngressControllerPublic = new k8s.helm.v3.Release(
+      'ingress-controller-public',
+      {
+        name: 'controller-public',
+        chart: 'kong',
+        skipCrds: true,
+        namespace: nsNameKong,
+        repositoryOpts: {repo: 'https://charts.konghq.com/'},
+        values: {
+          deployment: {
+            kong: {
+              enabled: false,
+            },
           },
-        },
-        ingressController: {
-          enabled: true,
-          installCRDs: false,
-          ingressClass: 'public',
-          watchNamespaces: [],
-          env: {
-            kong_workspace: 'public',
-            kong_admin_filter_tag: 'ingress_class_public',
-            kong_admin_token: {
-              valueFrom: {
-                secretKeyRef: {
-                  key: 'password',
-                  name: 'kong-enterprise-superuser-password',
+          ingressController: {
+            enabled: true,
+            installCRDs: false,
+            ingressClass: 'public',
+            watchNamespaces: [],
+            env: {
+              kong_workspace: 'public',
+              kong_admin_filter_tag: 'ingress_class_public',
+              kong_admin_token: {
+                valueFrom: {
+                  secretKeyRef: {
+                    key: 'password',
+                    name: 'kong-enterprise-superuser-password',
+                  },
                 },
               },
+              kong_admin_tls_skip_verify: true,
+              kong_admin_url: 'https://controlplane-kong-admin.kong.svc.cluster.local:8444',
+              publish_service: 'kong/dataplane-kong-proxy',
             },
-            kong_admin_tls_skip_verify: true,
-            kong_admin_url: 'https://controlplane-kong-admin.kong.svc.cluster.local:8444',
-            publish_service: 'kong/dataplane-kong-proxy',
-          },
-          image: {
-            repository: 'docker.io/kong/kubernetes-ingress-controller',
-            tag: kongIngressControllerImageTag,
+            image: {
+              repository: 'docker.io/kong/kubernetes-ingress-controller',
+              tag: kongIngressControllerImageTag,
+            },
           },
         },
       },
-    },
-    {
-      provider: kubeconfig,
-      parent: kongControlPlane,
-      dependsOn: [
-        kongPostgres,
-        kongDataPlane,
-        kongControlPlane,
-        kongClusterCert,
-        kongServicesTls,
-      ],
-      customTimeouts: {
-        create: '1m',
-        update: '1m',
-        delete: '1m',
+      {
+        provider: kubeconfig,
+        parent: kongControlPlane,
+        dependsOn: [
+          kongPostgres,
+          kongDataPlane,
+          kongControlPlane,
+          kongClusterCert,
+          kongServicesTls,
+        ],
+        customTimeouts: {
+          create: '1m',
+          update: '1m',
+          delete: '1m',
+        },
       },
-    },
-);
-// Kong Dataplane //
+  );
+} else {
+  // Else do not create 'Public' Ingress Controller //
+  ;
+};
 
 export const certManagerStatus = manager.status;
