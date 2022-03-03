@@ -201,7 +201,7 @@ kind delete cluster --name=kong
 ```sh
 pulumi --stack thekonglaboratory stack rm -y
 docker volume rm worker1 controlplane1
-rm -rf ~/thekonglaboratory
+cd ~ && rm -rf ~/thekonglaboratory
 ```
 
 ====
