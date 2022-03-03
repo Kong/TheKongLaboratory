@@ -396,7 +396,6 @@ const secretKongEnterpriseLicense = new k8s.core.v1.Secret(
       kind: 'Secret',
       type: 'Opaque',
       metadata: {
-        name: 'kong-enterprise-license',
         namespace: nsNameKong,
       },
       stringData: {
@@ -404,6 +403,9 @@ const secretKongEnterpriseLicense = new k8s.core.v1.Secret(
       },
     }, {
       provider: kubeconfig,
+      replaceOnChanges: [
+        'stringData',
+      ],
       dependsOn: [
         nsKong,
       ],
@@ -536,14 +538,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
     },
     enterprise: {
       enabled: true,
-      license_secret: {
-        valueFrom: {
-          secretKeyRef: {
-            name: secretKongEnterpriseLicense.metadata.name,
-            key: 'license',
-          },
-        },
-      },
+      license_secret: secretKongEnterpriseLicense.metadata.name,
       portal: {
         enabled: true,
       },
@@ -825,6 +820,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
   },
 }, {
   dependsOn: [
+    kongAppsTls,
     kongPostgres,
     kongServicesTls,
     kongClusterCert,
@@ -834,9 +830,9 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
     secretKongSuperAdminCredentials,
   ],
   customTimeouts: {
-    create: '1m',
-    update: '1m',
-    delete: '1m',
+    create: '2m',
+    update: '2m',
+    delete: '2m',
   },
   provider: kubeconfig,
 });
@@ -884,14 +880,6 @@ const kongDataPlane = new k8s.helm.v3.Release(
         },
         enterprise: {
           enabled: true,
-          license_secret: {
-            valueFrom: {
-              secretKeyRef: {
-                name: secretKongEnterpriseLicense.metadata.name,
-                key: 'license',
-              },
-            },
-          },
         },
         env: {
           cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',
@@ -969,9 +957,9 @@ const kongDataPlane = new k8s.helm.v3.Release(
         kongServicesTls,
       ],
       customTimeouts: {
-        create: '1m',
-        update: '1m',
-        delete: '1m',
+        create: '2m',
+        update: '2m',
+        delete: '2m',
       },
     },
 );
@@ -1030,9 +1018,9 @@ const kongIngressControllerDefault = new k8s.helm.v3.Release(
         kongServicesTls,
       ],
       customTimeouts: {
-        create: '1m',
-        update: '1m',
-        delete: '1m',
+        create: '2m',
+        update: '2m',
+        delete: '2m',
       },
     },
 );
@@ -1093,9 +1081,9 @@ if (kongConfigEntitlement) {
           kongServicesTls,
         ],
         customTimeouts: {
-          create: '1m',
-          update: '1m',
-          delete: '1m',
+          create: '2m',
+          update: '2m',
+          delete: '2m',
         },
       },
   );
