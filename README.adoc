@@ -17,7 +17,7 @@ In this hands on series we will dive into using both Kong API Gateway for servic
 
 === Dependencies
 
-This article is designed for you to follow along with your Apple or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
+This article is designed for you to follow along with your MacOS or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
 
 [cols="1,1"]
 |===
@@ -52,16 +52,8 @@ This article is designed for you to follow along with your Apple or Linux laptop
 
 === Host Setup
 Okay, now that you have your dependencies, let's grab the code and get our system ready to build the lab platform. +
- +
-In the next 3 steps we will: +
 
-* [*] Configure `/etc/hosts` to resolve our domain names to our host IP.
-* [*] Create a local cache for kind cluster images.
-* [*] Clone the demo repo codebase.
-
-***
-
-=========
+====
 
 [start=1]
 . Write Hosts File Entries
@@ -87,19 +79,26 @@ docker volume create controlplane1
 [start=3]
 . Clone the TheKongLaboratory git repo
 ```sh
-git clone https://github.com/kong/TheKongLaboratory.git ~/thekonglaboratory && \
+git clone https://github.com/kong/TheKongLaboratory.git ~/thekonglaboratory
 cd ~/thekonglaboratory
 ```
 
-=========
+====
 
 ***
 
 ==== Pulumi Infrastructure as Code
 
-Great! Now we have the code and a platform to deploy to! Before we can deploy our Kong Gateway we need to setup Pulumi & initialize our Pulumi Stack. +
+Great! Reviewing our check list, we now have: +
 
-=========
+* [*] Configured `/etc/hosts` to resolve our domain names to our host IP.
+* [*] Created local cache volumes for kind node images.
+* [*] Cloned the demo repo codebase.
+
+Our system is ready to run the lab and we have the code! Before we can deploy our Kong Gateway we need to initialize our Pulumi codebase and configure a stack. +
+
+====
+
 [start=4]
 . Pulumi local state provider login
 ```sh
@@ -124,13 +123,13 @@ pulumi stack select thekonglaboratory
 [start=6]
 . Set Configuration Variables +
 ```sh
-# Set an empty Kong Enterprise License for now
+# Create a Kong Enterprise License, an empty license will enable free mode
 pulumi config set --secret kong:license "'{}'"
 
-# NOTE: Set enterprise to true if deploying with an enterprise license
+# Set enterprise to true if deploying with an enterprise license
 pulumi config set kong:enterprise false
 ```
-=========
+====
 
 ***
 
@@ -138,7 +137,7 @@ pulumi config set kong:enterprise false
 
 Now, with your prep work done, it is time to start your Kind cluster and deploy Kong to it!
 
-=========
+====
 [start=7]
 . Deploy Kong Gateway Stack
 ```sh
@@ -152,7 +151,7 @@ pulumi up -y
 [start=8]
 . Go ahead and open up the Kong Manger UI !! +
 >> https://manager.kong.kind.home.arpa/
-=========
+====
 
 ***
 
@@ -180,20 +179,29 @@ See the following sub-modules for more examples on how to use this platform: +
 ***
 
 === Cleanup
-When you are finished with your local deployment you can destroy your kong deployment, delete the cluster, and clean up the docker volumes with the following commands+
+When you are finished with your local deployment you can destroy your kong deployment, delete the cluster, and clean up the docker volumes with the following commands +
 
-=========
+====
+
+. Unlock your local secret store.
 ```sh
-# Unlock your local secret store
 cd ~/thekonglaboratory
 export PULUMI_CONFIG_PASSPHRASE=mypassword
+```
 
-# Teardown Kong Deployment & Destroy Kind Cluster
+[start=2]
+. Teardown Kong Deployment & Destroy Kind Cluster.
+```sh
 pulumi --stack thekonglaboratory destroy -y
 kind delete cluster --name=kong
+```
 
-# Remove Pulumi Stack and Delete cached image store
+[start=3]
+. Remove Pulumi Stack, Delete cached image store, and remove cloned repository.
+```sh
 pulumi --stack thekonglaboratory stack rm -y
 docker volume rm worker1 controlplane1
+rm -rf ~/thekonglaboratory
 ```
-=========
+
+====
