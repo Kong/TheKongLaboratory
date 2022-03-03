@@ -877,7 +877,7 @@ const kongDataPlane = new k8s.helm.v3.Release(
         },
         enterprise: {
           enabled: true,
-          license_secret: 'kong-enterprise-license',
+          license_secret: secretKongEnterpriseLicense.metadata.name,
         },
         env: {
           cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',
