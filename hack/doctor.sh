@@ -1,2 +1,2 @@
 #!/bin/bash
-asciidoctor README.adoc --out-file doc/html/README.html
+asciidoctor README.adoc --out-file doc/html/index.html
