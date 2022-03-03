@@ -536,7 +536,14 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
     },
     enterprise: {
       enabled: true,
-      license_secret: secretKongEnterpriseLicense.metadata.name,
+      license_secret: {
+        valueFrom: {
+          secretKeyRef: {
+            name: secretKongEnterpriseLicense.metadata.name,
+            key: 'license',
+          },
+        },
+      },
       portal: {
         enabled: true,
       },
@@ -877,7 +884,14 @@ const kongDataPlane = new k8s.helm.v3.Release(
         },
         enterprise: {
           enabled: true,
-          license_secret: secretKongEnterpriseLicense.metadata.name,
+          license_secret: {
+            valueFrom: {
+              secretKeyRef: {
+                name: secretKongEnterpriseLicense.metadata.name,
+                key: 'license',
+              },
+            },
+          },
         },
         env: {
           cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',
