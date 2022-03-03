@@ -536,7 +536,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
     },
     enterprise: {
       enabled: true,
-      license_secret: 'kong-enterprise-license',
+      license_secret: secretKongEnterpriseLicense.metadata.name,
       portal: {
         enabled: true,
       },
