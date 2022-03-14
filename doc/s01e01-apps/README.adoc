@@ -1,0 +1,20 @@
+:showtitle:
+:doctitle:  Kong API Gateway Sample Apps
+:description: Kong API Gateway Sample Apps
+:homepage:  https://konghq.com
+
+= Kong API Gateway Sample Apps
+Kat Morgan <usrbinkat@konghq.com>
+v2.8, 2020-03-13
+
+== About
+This Pulumi Stack will deploy a series of test applications for practice and demonstration purposes.
+
+=== Apps:
+* [ ] podinfo
+* [ ] nginx
+* [ ] mockbin
+* [ ] httpbin
+* [ ] echo server
+* [ ] https://github.com/mock-server/mockserver[mock-server]
+* [ ] https://github.com/kubernetes-up-and-running/kuard[kuard]

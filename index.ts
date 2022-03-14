@@ -9,6 +9,7 @@ import {env} from 'process';
 interface Data {
   enterprise: boolean;
 }
+
 // Kong Configuration //
 const kongConfig = new pulumi.Config('kong');
 
@@ -468,7 +469,7 @@ const secretKongSuperAdminCredentials = new k8s.core.v1.Secret(
     },
 );
 
-// Helm Kong Integrated Deploy
+// Helm Kong Hybrid Controlplane Deployment
 const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
   name: 'controlplane',
   chart: 'kong',
