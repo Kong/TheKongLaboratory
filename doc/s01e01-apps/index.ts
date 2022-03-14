@@ -54,23 +54,20 @@ const appPodinfoFrontend = new k8s.helm.v3.Release('podinfo-frontend', {
       enabled: true,
       className: 'default',
       annotations: {
-        'konghq.com/path': '/podinfo',
+        'konghq.com/path': '/',
         'konghq.com/protocols': 'https',
         'konghq.com/strip-path': 'true',
         'konghq.com/preserve-host': 'true',
         'konghq.com/https-redirect-status-code': '301',
         'ingress.kubernetes.io/service-upstream': 'true',
         'cert-manager.io/cluster-issuer': 'certman-selfsigned-issuer',
-        'cert-manager.io/common-name': 'apps.kind.home.arpa',
+        'cert-manager.io/common-name': 'podinfo.apps.kind.home.arpa',
         'pulumi.com/skipAwait': 'true',
       },
       hosts: [{
-        host: 'apps.kind.home.arpa',
+        host: 'podinfo.apps.kind.home.arpa',
         paths: [{
-          path: '/podinfo',
-          pathType: 'ImplementationSpecific',
-        }, {
-          path: '/podinfo/*',
+          path: '/',
           pathType: 'ImplementationSpecific',
         }],
       }],
