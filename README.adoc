@@ -2,58 +2,23 @@
 :doctitle:  Kong on Kubernetes with Pulumi
 
 == About
-=== Why?
-The quest for resilience and agility has driven us into the modern age of micro-services. Bringing services to market on a micro service architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.
+=== What is in this repo?
+This repo represents source content for a series of API Gateway and Service Mesh exercises focused on enabling developers and ops personnel with practical local development workflows.
 
-In this hands on series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.
+=== Key Concepts
 
-=== Tools
+link:https://konghq.com/kong/[*Kong API Gateway*] is an link:https://konghq.com/learning-center/api-gateway/[API Gateway] and link:https://kubernetes.io/docs/concepts/services-networking/ingress/#what-is-ingress[Ingress Controller]. At it's core, Kong is a link:https://www.nginx.com/resources/glossary/reverse-proxy-server[reverse proxy] that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API Gateway truly begins to shine when leveraged to consolidate capabilities such as authentication, link:https://auth0.com/intro-to-iam/what-is-role-based-access-control-rbac/[rbac], session handling, rate limiting, request & response transformation, redirection, load balancing, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams, improving their agility and consolidating this functional ownership into a central location for improved global consistency and visibility.
 
-*Kong Gateway* is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.
-
-*Pulumi* is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.
-
-***
-
-=== Dependencies
-
-This article is designed for you to follow along with your MacOS or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies. +
-
-[cols="1,1"]
-|===
-| *Dependency* | *Installation Docs*
-
-| https://kubernetes.io/docs/reference/kubectl/kubectl[kubectl]
-| https://kubernetes.io/docs/tasks/tools/install-kubectl-linux[Linux] / https://kubernetes.io/docs/tasks/tools/install-kubectl-macos[Mac]
-
-| https://www.docker.com/[Docker]
-| https://docs.docker.com/engine/install/#server[Linux] / https://docs.docker.com/desktop/mac/install/[Mac]
-
-| https://kind.sigs.k8s.io[Kind]
-| https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries[Linux] / https://kind.sigs.k8s.io/docs/user/quick-start/#installing-with-a-package-manager[Mac]
-
-| https://helm.sh/docs/intro/install[Helm]
-| https://helm.sh/docs/intro/install/#from-script[Linux] / https://helm.sh/docs/intro/install/#from-homebrew-macos[Mac]
-
-| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Pulumi]
-| https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Linux] / https://www.pulumi.com/docs/get-started/install/#installing-pulumi[Mac]
-
-| https://nodejs.org/[npm]
-| https://github.com/nodesource/distributions#installation-instructions[Linux] / https://nodejs.org/en/download/[Mac]
-
-| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git client]
-| https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[Linux] / https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[Mac]
-
-| https://everything.curl.dev/get[curl client]
-| https://everything.curl.dev/get/linux[Linux] / https://everything.curl.dev/get/macos[Mac]
-|===
+link:https://www.pulumi.com/[*Pulumi*] is an link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[Infrastructure as Code] (link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[IaC]) or link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software/[Infrastructure as Software] (link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software[IaS]) cloud engineering platform. Pulumi supports IaC/IaS patterns using popular programming languages including Python, JavaScript, TypeScript, Golang, and .NET/C#. At it's heart, the Pulumi ecosystem is a cloud engineering platform and SDK offering that brings together developer, operations, and security teams through a unified software engineering process to accelerate innovation with more confidence via a full suite of link:https://github.com/open-gitops/documents/blob/main/PRINCIPLES.md[Open GitOps] compliant tools. +
 
 ***
 
 === Laboratory Index
 See the following sub-modules for examples on how to use this lab yourself. +
 
-* [x] link:doc/s01e01-KongOnKind.adoc[Platform Infrastructure Local Kong Gateway on Kind]
+* Please note that an empty checkbox indicates planned future content +
+
+* [x] link:QUICK_START.adoc[Platform Infrastructure Local Kong Gateway on Kind]
 * [ ] Sample Apps & Kong Ingress Controller
 * [ ] Sample Plugin: MTLS
 * [ ] Sample Plugin: JWT Auth
