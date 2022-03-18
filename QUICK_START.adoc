@@ -25,7 +25,7 @@ In this hands on series we will use:
 
 link:https://konghq.com/kong/[*Kong API Gateway*] is an link:https://konghq.com/learning-center/api-gateway/[API Gateway] and link:https://kubernetes.io/docs/concepts/services-networking/ingress/#what-is-ingress[Ingress Controller]. At it's core, Kong is a link:https://www.nginx.com/resources/glossary/reverse-proxy-server[reverse proxy] that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API Gateway truly begins to shine when leveraged to consolidate capabilities such as authentication, link:https://auth0.com/intro-to-iam/what-is-role-based-access-control-rbac/[rbac], session handling, rate limiting, request & response transformation, redirection, load balancing, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams, improving their agility and consolidating this functional ownership into a central location for improved global consistency and visibility.
 
-link:https://www.pulumi.com/[*Pulumi*], is an link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[Infrastructure as Code] (link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[IaC]) or link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software/[Infrastructure as Software] (link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software[IaS]) cloud engineering platform. Pulumi supports IaC/IaS patterns using popular programming languages including Python, JavaScript, TypeScript, Golang, and .NET/C#. At it's heart, the Pulumi ecosystem is a cloud engineering platform and SDK offering that brings together developer, operations, and security teams through a unified software engineering process to accelerate innovation with more confidence via a full suite of link:https://github.com/open-gitops/documents/blob/main/PRINCIPLES.md[Open GitOps] compliant tools. +
+link:https://www.pulumi.com/[*Pulumi*] is an link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[Infrastructure as Code] (link:https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code[IaC]) or link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software/[Infrastructure as Software] (link:https://www.pulumi.com/what-is/what-is-infrastructure-as-software[IaS]) cloud engineering platform. Pulumi supports IaC/IaS patterns using popular programming languages including Python, JavaScript, TypeScript, Golang, and .NET/C#. At it's heart, the Pulumi ecosystem is a cloud engineering platform and SDK offering that brings together developer, operations, and security teams through a unified software engineering process to accelerate innovation with more confidence via a full suite of link:https://github.com/open-gitops/documents/blob/main/PRINCIPLES.md[Open GitOps] compliant tools. +
 
 ***
 
@@ -263,6 +263,7 @@ export PULUMI_CONFIG_PASSPHRASE=mypassword
 [start=1]
 . Destroy Kong Pulumi Stack
 ```sh
+pulumi --stack podinfo destroy -y
 pulumi --stack thekonglaboratory destroy -y
 ```
 
