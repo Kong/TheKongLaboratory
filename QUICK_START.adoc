@@ -62,7 +62,7 @@ docker volume create controlplane1
 [start=3]
 . Clone link:https://github.com/Kong/TheKongLaboratory[TheKongLaboratory] git repo
 ```sh
-cd ~ && git clone --depth 1 --branch main https://github.com/kong/TheKongLaboratory
+cd ~ && git clone --depth 1 --branch v2.8.0 https://github.com/kong/TheKongLaboratory
 cd ~/TheKongLaboratory
 ```
 
