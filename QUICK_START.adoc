@@ -170,6 +170,9 @@ pulumi stack select podinfo
 pulumi up -y
 ```
 
+[start=10]
+. Go ahead and open up the Kong Manger UI !! +
+>> https://podinfo.apps.kind.home.arpa/
 ====
 
 

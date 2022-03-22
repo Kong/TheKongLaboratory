@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 // TODO: label deployment with sha of secrets to trigger pod rotation on change
 //   - ref: https://www.npmjs.com/package/shasum-object
 import * as tls from '@pulumi/tls';
@@ -295,7 +296,6 @@ const kongServicesTls = new k8s.apiextensions.CustomResource(
       },
       spec: {
         secretName: 'kong-controlplane-services-tls',
-        // eslint-disable-next-line max-len
         commonName: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
         dnsNames: [
           pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
@@ -541,7 +541,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
       enabled: true,
       license_secret: secretKongEnterpriseLicense.metadata.name,
       portal: {
-        enabled: true,
+        enabled: false,
       },
       rbac: {
         enabled: kongEnterpriseLicense,
@@ -576,7 +576,6 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
       proxy_stream_access_log: '/dev/stdout',
       proxy_stream_error_log: '/dev/stdout',
       lua_package_path: '/opt/?.lua;;',
-      // eslint-disable-next-line max-len
       lua_ssl_trusted_certificate: '/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt',
       proxy_access_log: '/dev/stdout',
       proxy_error_log: '/dev/stdout',
@@ -594,7 +593,6 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
       portal_cors_origins: '*',
       portal_gui_access_log: '/dev/stdout',
       portal_gui_error_log: '/dev/stdout',
-      // eslint-disable-next-line max-len
       portal_gui_host: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
       portal_gui_protocol: 'https',
       portal_gui_url: pulumi.interpolate`https://${kongPortalSubdomain}.${kongBaseDomain}/`,
@@ -667,11 +665,9 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
       // START Admin GUI Configuration //
       admin_gui_access_log: '/dev/stdout',
       admin_gui_error_log: '/dev/stdout',
-      // eslint-disable-next-line max-len
       admin_gui_host: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
       admin_gui_protocol: 'https',
       admin_gui_ssl_cert: '/etc/secrets/kong-controlplane-services-tls/tls.crt',
-      // eslint-disable-next-line max-len
       admin_gui_ssl_cert_key: '/etc/secrets/kong-controlplane-services-tls/tls.key',
       admin_gui_url: pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/`,
       // END Admin GUI Configuration //
@@ -725,67 +721,10 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
       type: 'ClusterIP',
     },
     portal: {
-      annotations: {
-        'konghq.com/protocol': 'https',
-      },
-      enabled: true,
-      http: {
-        containerPort: 8003,
-        enabled: false,
-        servicePort: 8003,
-      },
-      ingress: {
-        annotations: {
-          'kubernetes.io/ingress.class': 'public',
-          'konghq.com/protocols': 'https',
-          'konghq.com/strip-path': 'false',
-          'konghq.com/https-redirect-status-code': '301',
-        },
-        enabled: true,
-        hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
-        path: '/',
-        tls: 'kong-proxy-tls',
-      },
-      tls: {
-        containerPort: 8446,
-        enabled: true,
-        parameters: [
-          'http2',
-        ],
-        servicePort: 8446,
-      },
-      type: 'ClusterIP',
+      enabled: false,
     },
     portalapi: {
-      annotations: {
-        'konghq.com/protocol': 'https',
-      },
-      enabled: true,
-      http: {
-        enabled: false,
-      },
-      ingress: {
-        annotations: {
-          'kubernetes.io/ingress.class': 'public',
-          'konghq.com/protocols': 'https',
-          'konghq.com/strip-path': 'true',
-          'konghq.com/https-redirect-status-code': '301',
-          'nginx.ingress.kubernetes.io/app-root': '/',
-        },
-        enabled: true,
-        hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
-        path: '/api',
-        tls: 'kong-proxy-tls',
-      },
-      tls: {
-        containerPort: 8447,
-        enabled: true,
-        parameters: [
-          'http2',
-        ],
-        servicePort: 8447,
-      },
-      type: 'ClusterIP',
+      enabled: false,
     },
     proxy: {
       enabled: false,
@@ -886,17 +825,14 @@ const kongDataPlane = new k8s.helm.v3.Release(
           cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',
           cluster_cert_key: '/etc/secrets/kong-cluster-cert/tls.key',
           // TODO: variablize controlplane-kong-cluster dns name
-          // eslint-disable-next-line max-len
           cluster_control_plane: 'controlplane-kong-cluster.kong.svc.cluster.local:8005',
           // TODO: variablize controlplane-kong-clustertelemetry
-          // eslint-disable-next-line max-len
           cluster_telemetry_endpoint: 'controlplane-kong-clustertelemetry.kong.svc.cluster.local:8006',
           ssl_cert_key: '/etc/secrets/kong-controlplane-services-tls/tls.key',
           ssl_cert: '/etc/secrets/kong-controlplane-services-tls/tls.crt',
           database: 'off',
           log_level: kongLogLevel,
           lua_package_path: '/opt/?.lua;;',
-          // eslint-disable-next-line max-len
           lua_ssl_trusted_certificate: '/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt',
           nginx_worker_processes: '2',
           plugins: pulumi.interpolate`${kongPlugins}`,
@@ -1026,7 +962,314 @@ const kongIngressControllerDefault = new k8s.helm.v3.Release(
     },
 );
 
-// Kong Entitlements //
+// Kong Entitlement based Eval //
+if (kongConfigEntitlement) {
+  // Kong Developer Portal - Only deploy if Enterprise Edition enabled //
+  // eslint-disable-next-line no-unused-vars
+  const kongDeveloperPortal = new k8s.helm.v3.Release(
+      'developer-portal',
+      {
+        name: 'developer-portal',
+        chart: 'kong',
+        skipCrds: true,
+        namespace: nsNameKong,
+        repositoryOpts: {repo: 'https://charts.konghq.com/'},
+        values: {
+          namespace: nsNameKong,
+          admin: {
+            enabled: false,
+          },
+          cluster: {
+            enabled: true,
+            type: 'ClusterIP',
+            labels: {
+              'konghq.com/service': 'portal',
+            },
+            tls: {
+              containerPort: 8005,
+              enabled: true,
+              servicePort: 8005,
+            },
+          },
+          clustertelemetry: {
+            enabled: false,
+          },
+          deployment: {
+            kong: {
+              enabled: true,
+              daemonset: false,
+            },
+          },
+          enterprise: {
+            enabled: true,
+            license_secret: secretKongEnterpriseLicense.metadata.name,
+            portal: {
+              enabled: true,
+            },
+            rbac: {
+              enabled: kongEnterpriseLicense,
+              admin_api_auth: 'basic-auth',
+              admin_gui_auth_conf_secret: 'kong-session-config',
+              session_conf_secret: 'kong-session-config',
+            },
+            smtp: {
+              enabled: false,
+            },
+            vitals: {
+              enabled: false,
+            },
+          },
+          env: {
+            role: 'control_plane',
+            plugins: pulumi.interpolate`${kongPlugins}`,
+            log_level: kongLogLevel,
+            password: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: 'kong-enterprise-superuser-password',
+                  key: 'password',
+                },
+              },
+            },
+            trusted_ips: '0.0.0.0/0,::/0',
+            status_listen: '0.0.0.0:8100',
+            cluster_listen: '0.0.0.0:8005',
+            cluster_telemetry_listen: '0.0.0.0:8006',
+            cluster_data_plane_purge_delay: 60,
+            proxy_stream_access_log: '/dev/stdout',
+            proxy_stream_error_log: '/dev/stdout',
+            lua_package_path: '/opt/?.lua;;',
+            lua_ssl_trusted_certificate: '/etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt',
+            proxy_access_log: '/dev/stdout',
+            proxy_error_log: '/dev/stdout',
+            nginx_worker_processes: '2',
+            prefix: '/kong_prefix/',
+            smtp_mock: 'on',
+            vitals: true,
+
+            // START Kong Portal Configuration //
+            portal: true,
+            portal_api_error_log: '/dev/stdout',
+            portal_api_access_log: '/dev/stdout',
+            portal_api_uri: pulumi.interpolate`https://${kongPortalSubdomain}.${kongBaseDomain}/api`,
+            portal_auth: 'basic-auth',
+            portal_cors_origins: '*',
+            portal_gui_access_log: '/dev/stdout',
+            portal_gui_error_log: '/dev/stdout',
+            portal_gui_host: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+            portal_gui_protocol: 'https',
+            portal_gui_url: pulumi.interpolate`https://${kongPortalSubdomain}.${kongBaseDomain}/`,
+            portal_session_conf: {
+              valueFrom: {
+                secretKeyRef: {
+                  key: 'portal_session_conf',
+                  name: 'kong-session-config',
+                },
+              },
+            },
+            // STOP Kong Portal Configuration //
+
+            // START Database Configuration //
+            pg_port: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: secretPostgresCredentials.metadata.name,
+                  key: 'port',
+                },
+              },
+            },
+            pg_user: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: secretPostgresCredentials.metadata.name,
+                  key: 'user',
+                },
+              },
+            },
+            pg_database: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: secretPostgresCredentials.metadata.name,
+                  key: 'database',
+                },
+              },
+            },
+            pg_password: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: secretPostgresCredentials.metadata.name,
+                  key: 'password',
+                },
+              },
+            },
+            pg_host: {
+              valueFrom: {
+                secretKeyRef: {
+                  name: secretPostgresCredentials.metadata.name,
+                  key: 'host',
+                },
+              },
+            },
+            database: 'postgres',
+            // WARN: database ssl disabled not recommended for production
+            pg_ssl_verify: 'off',
+            // WARN: database SSL disabled on DB, not recommended for production
+            pg_ssl: 'off',
+            // END Database Configuration //
+
+            // START Admin API Configuration //
+            admin_api_uri: pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/api`,
+            admin_ssl_cert_key: '/etc/secrets/kong-controlplane-services-tls/tls.key',
+            admin_ssl_cert: '/etc/secrets/kong-controlplane-services-tls/tls.crt',
+            admin_access_log: '/dev/stdout',
+            admin_error_log: '/dev/stdout',
+            // END Admin API Configuration //
+
+            // START Admin GUI Configuration //
+            admin_gui_access_log: '/dev/stdout',
+            admin_gui_error_log: '/dev/stdout',
+            admin_gui_host: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
+            admin_gui_protocol: 'https',
+            admin_gui_ssl_cert: '/etc/secrets/kong-controlplane-services-tls/tls.crt',
+            admin_gui_ssl_cert_key: '/etc/secrets/kong-controlplane-services-tls/tls.key',
+            admin_gui_url: pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/`,
+            // END Admin GUI Configuration //
+
+            // // START Proxy Configuration //
+            ssl_cert: '/etc/secrets/kong-proxy-tls/tls.crt',
+            ssl_cert_key: '/etc/secrets/kong-proxy-tls/tls.key',
+            // // END Proxy Configuration //
+
+            // // START Cluster MTLS Configuration //
+            cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',
+            cluster_cert_key: '/etc/secrets/kong-cluster-cert/tls.key',
+            // // END Cluster MTLS Configuration //
+          },
+          image: {
+            repository: 'kong/kong-gateway',
+            tag: kongImageTag,
+          },
+          ingressController: {
+            enabled: false,
+            installCRDs: false,
+          },
+          manager: {
+            enabled: false,
+          },
+          portal: {
+            annotations: {
+              'konghq.com/protocol': 'https',
+            },
+            enabled: true,
+            http: {
+              containerPort: 8003,
+              enabled: false,
+              servicePort: 8003,
+            },
+            ingress: {
+              annotations: {
+                'kubernetes.io/ingress.class': 'public',
+                'konghq.com/protocols': 'https',
+                'konghq.com/strip-path': 'false',
+                'konghq.com/https-redirect-status-code': '301',
+              },
+              enabled: true,
+              hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+              path: '/',
+              tls: 'kong-proxy-tls',
+            },
+            tls: {
+              containerPort: 8446,
+              enabled: true,
+              parameters: [
+                'http2',
+              ],
+              servicePort: 8446,
+            },
+            type: 'ClusterIP',
+          },
+          portalapi: {
+            annotations: {
+              'konghq.com/protocol': 'https',
+            },
+            enabled: true,
+            http: {
+              enabled: false,
+            },
+            ingress: {
+              annotations: {
+                'kubernetes.io/ingress.class': 'public',
+                'konghq.com/protocols': 'https',
+                'konghq.com/strip-path': 'true',
+                'konghq.com/https-redirect-status-code': '301',
+                'nginx.ingress.kubernetes.io/app-root': '/',
+              },
+              enabled: true,
+              hostname: pulumi.interpolate`${kongPortalSubdomain}.${kongBaseDomain}`,
+              path: '/api',
+              tls: 'kong-proxy-tls',
+            },
+            tls: {
+              containerPort: 8447,
+              enabled: true,
+              parameters: [
+                'http2',
+              ],
+              servicePort: 8447,
+            },
+            type: 'ClusterIP',
+          },
+          proxy: {
+            enabled: false,
+          },
+          replicaCount: 1,
+          secretVolumes: [
+            'kong-controlplane-services-tls',
+            'kong-cluster-cert',
+            'kong-proxy-tls',
+          ],
+          status: {
+            enabled: true,
+            http: {
+              containerPort: 8100,
+              enabled: true,
+            },
+            tls: {
+              containerPort: 8543,
+              enabled: false,
+            },
+          },
+          migrations: {
+            enabled: false,
+          },
+          extraLabels: {
+            'konghq.com/component': 'portal',
+          },
+        },
+      },
+      {
+        provider: kubeconfig,
+        parent: kongControlPlane,
+        dependsOn: [
+          kongPostgres,
+          kongDataPlane,
+          kongControlPlane,
+          kongClusterCert,
+          kongServicesTls,
+        ],
+        customTimeouts: {
+          create: '2m',
+          update: '2m',
+          delete: '2m',
+        },
+      },
+  );
+} else {
+  // Else do not create 'Public' Ingress Controller //
+  ;
+};
+
+// Kong Entitlement based Eval //
 if (kongConfigEntitlement) {
   // Kong Ingress Controller - Ingress Class Public //
   // eslint-disable-next-line no-unused-vars
