@@ -1,0 +1,14 @@
+:showtitle:
+:doctitle:  TheKongLaboratory | Keycloak
+:description:  TheKongLaboratory | Keycloak
+:homepage:  https://github.com/Kong/TheKongLaboratory/tree/v2.8.1-feature-separate-portal-release/doc/gateway-s01e02-keycloak
+
+= Kong API Gateway Sample Apps
+Kat Morgan <usrbinkat@konghq.com>
+v2.8, 2020-03-23
+
+== About
+This Pulumi Stack will deploy Keycloak and keycloak operator configuration to kubernetes.
+
+=== Apps:
+* [x] keycloak

@@ -1,76 +1,59 @@
 == Kong API Gateway on local Kind Kubernetes ==
 
-If your system link:../README.adoc#Dependencies[meets all dependencies], let's grab the code and get our system ready to build the lab platform. +
 
 
 === Host Prep
 
 [start=1]
-. Clone the TheKongLaboratory git repo
-```sh
-git clone https://github.com/kong/TheKongLaboratory.git ~/thekonglaboratory
-cd ~/thekonglaboratory
-```
+. Make sure you have all link:../README.adoc#Dependencies[dependencies]
 
 [start=2]
-. Write Hosts File Entries
+. Clone the TheKongLaboratory git repo
 ```sh
-# Set ADDRESS to your public IP address if you plan to use keycloak
-
-export ADDRESS=127.0.0.1
-cat <<EOF | sudo tee -a /etc/hosts
-${ADDRESS}  apps.kind.home.arpa
-${ADDRESS}  portal.kong.kind.home.arpa
-${ADDRESS}  manager.kong.kind.home.arpa
-${ADDRESS}  keycloak.apps.kind.home.arpa
-EOF
-```
-
-[start=3]
-. Create docker volumes for persistent local container image caching +
-```sh
-docker volume create worker1
-docker volume create controlplane1
+cd ~
+git clone --depth 1 --branch v2.8.0 https://github.com/kong/TheKongLaboratory
+cd ~/TheKongLaboratory
 ```
 
 === Pulumi Infrastructure as Code
 
-Great! Reviewing our check list, we now have: +
+Great! You now have: +
 
-* [*] Cloned the demo repo codebase.
-* [*] Configured `/etc/hosts` to resolve our domain names to our host IP.
-* [*] Created local cache volumes for kind node images.
+* [*] Installed all link:../README.adoc#Dependencies[dependencies]
+* [*] Cloned https://github.com/kong/TheKongLaboratory[TheKongLaboratory] codebase.
 
-Our system is ready to run the lab and we have the code! Before we can deploy our Kong Gateway we need to initialize our Pulumi codebase and configure a stack. +
+Your system is ready to run the lab and we have the code! +
+Before we can deploy our Kong Gateway we need to initialize our Pulumi codebase and configure a stack. +
 
-[start=4]
+[start=3]
 . Pulumi local state provider login
-```sh
-# Set a Pulumi local state login password
-export PULUMI_CONFIG_PASSPHRASE=mypassword
 
-# Run pulumi login --help for more state backend and login information
+* Set a Pulumi local state login password
+* Run pulumi login --help for more state backend and login information
+```sh
+
+export PULUMI_CONFIG_PASSPHRASE=mypassword
 pulumi login --local
 ```
 
-[start=5]
+[start=4]
 . Initialize & Select Pulumi Stack
-```sh
-# Download npm packages for Pulumi typescript IaC
-npm install
 
-# Initialize and select your pulumi stack
-pulumi stack init thekonglaboratory
-pulumi stack select thekonglaboratory
+* Download npm packages for Pulumi typescript IaC
+* Initialize and select your pulumi stack
+```sh
+npm install
+pulumi stack init thekonglaboratory && pulumi stack select thekonglaboratory
 ```
 
-[start=6]
+[start=5]
 . Set Configuration Variables +
-```sh
-# Create a Kong Enterprise License, an empty license will enable free mode
-pulumi config set --secret kong:license "'{}'"
 
-# Set enterprise to true if deploying with an enterprise license
+* Create a Kong Enterprise License, an empty license will enable free mode
+* Set enterprise to true if deploying with an enterprise license
+
+```sh
+pulumi config set --secret kong:license "'{}'"
 pulumi config set kong:enterprise false
 ```
 
@@ -78,19 +61,20 @@ pulumi config set kong:enterprise false
 
 Now, with your prep work done, it is time to start your Kind cluster and deploy Kong to it!
 
-[start=7]
+[start=6]
 . Deploy Kong Gateway Stack
-```sh
-# Start Kind Kubernetes Cluster
-clear; kind create cluster --config hack/kind/config.yml
 
-# Pulumi Deploy Kong Gateway & Dependencies
+* Start Kind Kubernetes Cluster
+* Pulumi Deploy Kong Gateway & Dependencies
+```sh
+kind create cluster --config hack/kind/config.yml
 pulumi up -y
 ```
 
-[start=8]
+[start=7]
 . Go ahead and open up the Kong Manger UI !! +
->> https://manager.kong.kind.home.arpa/
+
+* https://manager.kong.7f000001.nip.io/
 
 == Conclusion
 Now you have deployed a working Kong Gateway with Pulumi. From here you can continue with configuring kong manager and kong plugins, or you can start using the Kong Ingress Controller to publish services on your kind cluster via Kong.
@@ -100,8 +84,9 @@ When you are finished with your local deployment you can destroy your kong deplo
 
 . Unlock your local secret store.
 ```sh
-cd ~/thekonglaboratory
+cd ~/TheKongLaboratory
 export PULUMI_CONFIG_PASSPHRASE=mypassword
+pulumi login --local
 ```
 
 [start=2]
@@ -116,5 +101,5 @@ kind delete cluster --name=kong
 ```sh
 pulumi --stack thekonglaboratory stack rm -y
 docker volume rm worker1 controlplane1
-cd ~ && rm -rf ~/thekonglaboratory
+cd ~ && rm -rf ~/TheKongLaboratory
 ```

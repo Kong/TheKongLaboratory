@@ -52,7 +52,7 @@ const appPodinfoFrontend = new k8s.helm.v3.Release('podinfo-frontend', {
     backend: pulumi.interpolate`http://podinfo-backend:9898/echo`,
     ingress: {
       enabled: true,
-      className: 'default',
+      className: 'public',
       annotations: {
         'konghq.com/path': '/',
         'konghq.com/protocols': 'https',

@@ -1,0 +1,33 @@
+# https://github.com/keycloak/keycloak-documentation/blob/master/server_installation/topics/operator/keycloak-user-cr.adoc
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: "test"
+  labels:
+    realm: "default"
+  generation: 4
+  finalizers:
+  - user.cleanup
+spec:
+  realmSelector:
+    matchLabels:
+      realm: "default"
+  user:
+    enabled: true
+    username: test
+    lastName: User
+    firstName: Test
+    email: test@home.arpa
+    emailVerified: true
+    credentials:
+    - type: password
+      value: "testuserpassword"
+      temporary: false
+#    clientRoles:
+#      account:
+#      - manage-account
+#      realm-management:
+#      - manage-users
+#    realmRoles:
+#    - offline_access
+#    - project_manager

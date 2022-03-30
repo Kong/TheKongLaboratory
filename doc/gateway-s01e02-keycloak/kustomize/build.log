@@ -1,0 +1,29 @@
+kubectl create namespace keycloak --dry-run=client -oyaml | kubectl apply -f -
+
+git clone https://github.com/keycloak/keycloak-operator.git /tmp/keycloak
+kubectl apply -n keycloak -f /tmp/keycloak/deploy/crds
+kubectl apply -n keycloak -f /tmp/keycloak/deploy/role.yaml
+kubectl apply -n keycloak -f /tmp/keycloak/deploy/role_binding.yaml
+kubectl apply -n keycloak -f /tmp/keycloak/deploy/service_account.yaml
+kubectl apply -n keycloak -f /tmp/keycloak/deploy/operator.yaml
+
+kubectl apply -n keycloak -f ./keycloak/selfsigned-keycloak-tls.yml
+kubectl apply -n keycloak -f ./keycloak/keycloak.yml 
+kubectl apply -n keycloak -f ./keycloak/realm.yml 
+kubectl apply -n keycloak -f ./keycloak/client.yml 
+kubectl annotate service -n keycloak keycloak konghq.com/protocol="https"
+kubectl apply -n keycloak -f ./keycloak/ingress.yml 
+
+# References:
+# https://www.keycloak.org/docs/latest/server_installation/index.html#_install_by_command
+# https://github.com/keycloak/keycloak-quickstarts/tree/latest/kubernetes-examples
+# https://github.com/keycloak/keycloak-quickstarts/tree/latest/operator-examples
+# https://www.keycloak.org/getting-started/getting-started-operator-kubernetes
+# https://dev.to/stack-labs/scaling-keycloak-on-distroless-into-kubernetes-fj3
+# https://blog.codecentric.de/en/2019/05/configuring-kubernetes-login-keycloak/
+# https://medium.com/@sagarpatkeatl/kubernetes-with-keycloak-eca47f86abec
+# https://www.coveros.com/keycloak-operator-running-locally-with-kind/
+# http://www.mastertheboss.com/keycloak/keycloak-with-docker/
+#
+# export VERSION_OLM=$(curl -s https://api.github.com/repos/operator-framework/operator-lifecycle-manager/releases/latest | awk -F '["v,]' '/tag_name/{print $5}')
+# curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v$VERSION_OLM/install.sh | bash -s v$VERSION_OLM

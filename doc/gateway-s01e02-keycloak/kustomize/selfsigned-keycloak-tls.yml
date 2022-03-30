@@ -1,0 +1,18 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: keycloak.apps.kind.home.arpa
+  namespace: keycloak
+spec:
+  isCA: false
+  duration: 2160h
+  renewBefore: 360h
+  secretName: keycloak-tls
+  commonName: keycloak.apps.kind.home.arpa
+  dnsNames:
+  - "keycloak.apps.kind.home.arpa"
+  - "*.keycloak.apps.kind.home.arpa"
+  issuerRef:
+    name: certman-selfsigned-issuer
+    kind: ClusterIssuer

@@ -9,16 +9,15 @@ import {env} from 'process';
 
 interface Data {
   enterprise: boolean;
+  domain: string;
 }
 
 // Kong Configuration //
 const kongConfig = new pulumi.Config('kong');
+const kubeConfig = new pulumi.Config('kube');
 
 // Variables
 const name = 'kong';
-
-// KubeConfig Context
-const kubeConfigContext = 'kind-kong';
 
 // Kong Session Config
 const secretKongSessionConfigSalt = 'this-is-a-random-session-config-salt';
@@ -31,7 +30,7 @@ const kongSuperAdminPassword = 'kong_admin';
 const kongAppSubdomain = 'apps';
 const kongPortalSubdomain = 'portal.kong';
 const kongManagerSubdomain = 'manager.kong';
-const kongBaseDomain = 'kind.home.arpa';
+const kongBaseDomain = (kongConfig.get('domain') || '7f000001.nip.io').replace(/^\./, '');
 
 // Kong Admin Credentials
 const kongPostgresPort = '5432';
@@ -62,6 +61,9 @@ const nsNameCertManager = 'cert-manager';
 
 // Postgres Image Tag
 const postgresImageTag = '14.1.0';
+
+// KubeConfig Context Name, default to 'kind-config' or override with pulumi config
+const kubeConfigContext = (kubeConfig.get('context') || 'kind-config');
 
 // Export the cluster's kubeconfig.
 const kubeconfig = new k8s.Provider('kubeconfig', {
@@ -699,6 +701,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
         enabled: true,
         annotations: {
           'kubernetes.io/ingress.class': 'default',
+          'konghq.com/https-redirect-status-code': '301',
           'nginx.ingress.kubernetes.io/backend-protocol': 'HTTPS',
         },
         hostname: pulumi.interpolate`${kongManagerSubdomain}.${kongBaseDomain}`,
@@ -820,6 +823,7 @@ const kongDataPlane = new k8s.helm.v3.Release(
         },
         enterprise: {
           enabled: true,
+          license_secret: secretKongEnterpriseLicense.metadata.name,
         },
         env: {
           cluster_cert: '/etc/secrets/kong-cluster-cert/tls.crt',

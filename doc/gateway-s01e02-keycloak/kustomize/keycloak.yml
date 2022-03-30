@@ -1,0 +1,22 @@
+---
+apiVersion: keycloak.org/v1alpha1
+kind: Keycloak
+metadata:
+  name: default
+  namespace: keycloak
+  labels:
+    realm: default
+spec:
+  instances: 1
+  keycloakDeploymentSpec:
+    experimental:
+      env:
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
+# extensions:
+#   - >-
+#     https://github.com/aerogear/keycloak-metrics-spi/releases/download/2.4.0/keycloak-metrics-spi-2.4.0.jar
+#  externalAccess:
+#    enabled: False
+#    host: keycloak.kongeelabs.home.arpa
+#    tlsTermination: "reencrypt"

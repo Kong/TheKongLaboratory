@@ -1,0 +1,36 @@
+# kubectl annotate service -nkeycloak keycloak konghq.com/protocol=https
+# Append annotation to svc
+# Upstream / Backend protocol
+# annotations:
+#   konghq.com/protocol: "https"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-kong-ingress
+  namespace: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+  annotations:
+    konghq.com/protocols: "https"
+    konghq.com/strip-path: "true"
+    konghq.com/preserve-host: "true"
+    kubernetes.io/ingress.class: "default"
+    konghq.com/https-redirect-status-code: '302'
+    ingress.kubernetes.io/service-upstream: "true"
+spec:
+  tls:
+    - hosts:
+        - keycloak.apps.kind.home.arpa
+      secretName: keycloak-tls
+  rules:
+  - host: keycloak.apps.kind.home.arpa
+    http:
+      paths:
+      - path: /*
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak
+            port:
+              name: keycloak
