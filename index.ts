@@ -7,9 +7,9 @@ import * as k8s from '@pulumi/kubernetes';
 import * as certmanager from '@pulumi/kubernetes-cert-manager';
 import {env} from 'process';
 
+// eslint-disable-next-line no-unused-vars
 interface Data {
   enterprise: boolean;
-  domain: string;
 }
 
 // Kong Configuration //
@@ -40,10 +40,18 @@ const kongPostgresAdminPassword = 'kong';
 const kongPostgresReplicationPassword = 'kong';
 const kongPostgresDatabase = 'kong';
 const kongPostgresHost = 'postgres-postgresql.kong.svc.cluster.local';
-const kongEnterpriseLicense = kongConfig.requireSecret('license');
 
-// Additional Kong Ingress Controller(s) Boolean
+// Detect entitlement & enable Kong Enterprise features if licensed
+// const kongEnterpriseLicense = (kongConfig.getSecret('license') || ('\'{}\''));
+// const n = kongEnterpriseLicense.length;
+// let kongConfigEntitlement: boolean = false;
+// if ( n > 8) {
+//   const kongConfigEntitlement: boolean = true;
+// } else {
+//   const kongConfigEntitlement: boolean = false;
+// };
 const kongConfigEntitlement = (kongConfig.getObject<Data>('enterprise'));
+const kongEnterpriseLicense = kongConfig.requireSecret('license');
 
 // Kong plugins
 const kongPlugins = 'bundled,openid-connect';
@@ -62,8 +70,8 @@ const nsNameCertManager = 'cert-manager';
 // Postgres Image Tag
 const postgresImageTag = '14.1.0';
 
-// KubeConfig Context Name, default to 'kind-config' or override with pulumi config
-const kubeConfigContext = (kubeConfig.get('context') || 'kind-config');
+// KubeConfig Context Name, default to 'kind-kong' or override with pulumi config
+const kubeConfigContext = (kubeConfig.get('context') || 'kind-kong');
 
 // Export the cluster's kubeconfig.
 const kubeconfig = new k8s.Provider('kubeconfig', {
@@ -546,7 +554,7 @@ const kongControlPlane = new k8s.helm.v3.Release('controlplane', {
         enabled: false,
       },
       rbac: {
-        enabled: kongEnterpriseLicense,
+        enabled: kongConfigEntitlement,
         admin_api_auth: 'basic-auth',
         admin_gui_auth_conf_secret: 'kong-session-config',
         session_conf_secret: 'kong-session-config',
@@ -1011,7 +1019,7 @@ if (kongConfigEntitlement) {
               enabled: true,
             },
             rbac: {
-              enabled: kongEnterpriseLicense,
+              enabled: kongConfigEntitlement,
               admin_api_auth: 'basic-auth',
               admin_gui_auth_conf_secret: 'kong-session-config',
               session_conf_secret: 'kong-session-config',
@@ -1340,4 +1348,6 @@ if (kongConfigEntitlement) {
   ;
 };
 
-export const certManagerStatus = manager.status;
+export const KongEnterprise = kongConfigEntitlement;
+export const KongAdminManager = pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}`;
+export const KongAdminApi = pulumi.interpolate`https://${kongManagerSubdomain}.${kongBaseDomain}/api`;
