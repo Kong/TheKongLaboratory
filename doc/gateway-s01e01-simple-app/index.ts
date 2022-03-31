@@ -1,9 +1,20 @@
-import * as k8s from "@pulumi/kubernetes";
+/* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
+import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
 import {env} from 'process';
 
+// Kong Configuration //
+const appConfig = new pulumi.Config('kong');
+const kubeConfig = new pulumi.Config('kube');
+
+
+// App Domain Name Defaults
+const appSubdomain = 'apps';
+const appBaseDomain = (appConfig.get('domain') || '7f000001.nip.io').replace(/^\./, '');
+
 // KubeConfig Context
-const kubeConfigContext = 'kind-kong';
+const kubeConfigContext = (kubeConfig.get('context') || 'kind-kong');
 
 // App Namespaces
 export const nsNameAppsDefault = 'demo';
@@ -61,11 +72,11 @@ const appPodinfoFrontend = new k8s.helm.v3.Release('podinfo-frontend', {
         'konghq.com/https-redirect-status-code': '301',
         'ingress.kubernetes.io/service-upstream': 'true',
         'cert-manager.io/cluster-issuer': 'certman-selfsigned-issuer',
-        'cert-manager.io/common-name': 'podinfo.apps.kind.home.arpa',
+        'cert-manager.io/common-name': pulumi.interpolate`podinfo.${appSubdomain}.${appBaseDomain}`,
         'pulumi.com/skipAwait': 'true',
       },
       hosts: [{
-        host: 'podinfo.apps.kind.home.arpa',
+        host: pulumi.interpolate`podinfo.${appSubdomain}.${appBaseDomain}`,
         paths: [{
           path: '/',
           pathType: 'ImplementationSpecific',
@@ -82,3 +93,5 @@ const appPodinfoFrontend = new k8s.helm.v3.Release('podinfo-frontend', {
     appPodinfoBackend,
   ],
 });
+
+export const urlPodinfo = pulumi.interpolate`https://podinfo.${appSubdomain}.${appBaseDomain}/`;
