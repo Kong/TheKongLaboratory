@@ -263,13 +263,4 @@ pulumi --stack thekonglaboratory stack rm -y
 cd ~ && rm -rf ~/thekonglaboratory
 ```
 
-[start=5]
-. Open the `/etc/hosts` file and remove the following entries:
-```sh
-127.0.0.1  apps.kind.home.arpa
-127.0.0.1  portal.kong.kind.home.arpa
-127.0.0.1  manager.kong.kind.home.arpa
-127.0.0.1  keycloak.apps.kind.home.arpa
-127.0.0.1  podinfo.apps.kind.home.arpa
-```
 ====
