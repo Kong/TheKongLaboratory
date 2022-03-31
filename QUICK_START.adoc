@@ -40,7 +40,7 @@ Okay, now that you have your dependencies, let's grab the code and get your syst
 [start=1]
 . Clone link:https://github.com/Kong/TheKongLaboratory[TheKongLaboratory] git repo
 ```sh
-cd ~ && git clone --depth 1 --branch v2.8.0 https://github.com/kong/TheKongLaboratory
+cd ~ && git clone --depth 1 --branch v2.8.1-feature-separate-portal-release https://github.com/kong/TheKongLaboratory
 cd ~/TheKongLaboratory
 ```
 
