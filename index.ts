@@ -54,7 +54,7 @@ const kongConfigEntitlement = (kongConfig.getObject<Data>('enterprise'));
 const kongEnterpriseLicense = kongConfig.requireSecret('license');
 
 // Kong plugins
-const kongPlugins = 'bundled,openid-connect';
+const kongPlugins = (kongConfig.get('plugins') || 'bundled,openid-connect');
 const kongLogLevel = 'debug';
 
 // Kong Image Tags
