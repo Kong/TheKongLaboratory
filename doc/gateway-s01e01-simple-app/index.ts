@@ -4,7 +4,7 @@ import * as k8s from '@pulumi/kubernetes';
 import * as pulumi from '@pulumi/pulumi';
 import {env} from 'process';
 
-// Kong Configuration //
+// Configuration //
 const appConfig = new pulumi.Config('kong');
 const kubeConfig = new pulumi.Config('kube');
 
@@ -12,6 +12,7 @@ const kubeConfig = new pulumi.Config('kube');
 // App Domain Name Defaults
 const appSubdomain = 'apps';
 const appBaseDomain = (appConfig.get('domain') || '7f000001.nip.io').replace(/^\./, '');
+const appsIngressClassName = (appConfig.get('ingressClass') || 'default');
 
 // KubeConfig Context
 const kubeConfigContext = (kubeConfig.get('context') || 'kind-kong');
@@ -63,7 +64,7 @@ const appPodinfoFrontend = new k8s.helm.v3.Release('podinfo-frontend', {
     backend: pulumi.interpolate`http://podinfo-backend:9898/echo`,
     ingress: {
       enabled: true,
-      className: 'default',
+      className: appsIngressClassName,
       annotations: {
         'konghq.com/path': '/',
         'konghq.com/protocols': 'https',
