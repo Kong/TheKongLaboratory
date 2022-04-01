@@ -888,6 +888,23 @@ const kongDataPlane = new k8s.helm.v3.Release(
           },
           type: 'ClusterIP',
         },
+        updateStrategy: {
+          type: 'RollingUpdate',
+          rollingUpdate: {
+            maxSurge: '100%',
+            maxUnavailable: '100%',
+          },
+        },
+        resources: {
+          requests: {
+            cpu: '1',
+            memory: '1G',
+          },
+          limits: {
+            cpu: '1',
+            memory: '1G',
+          },
+        },
         replicaCount: 1,
         secretVolumes: [
           'kong-controlplane-services-tls',
