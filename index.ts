@@ -862,7 +862,11 @@ const kongDataPlane = new k8s.helm.v3.Release(
         },
         ingressController: {enabled: false, installCRDs: false},
         manager: {enabled: false},
-        migrations: {preUpgrade: false, postUpgrade: false},
+        migrations: {
+          enabled: false,
+          preUpgrade: false,
+          postUpgrade: false,
+        },
         namespace: nsNameKong,
         portal: {enabled: false},
         portalapi: {enabled: false},
@@ -1050,7 +1054,7 @@ if (kongConfigEntitlement) {
           },
           env: {
             role: 'control_plane',
-            plugins: pulumi.interpolate`${kongPlugins}`,
+            // plugins: pulumi.interpolate`${kongPlugins}`,
             log_level: kongLogLevel,
             password: {
               valueFrom: {
@@ -1270,6 +1274,8 @@ if (kongConfigEntitlement) {
           },
           migrations: {
             enabled: false,
+            preUpgrade: false,
+            postUpgrade: false,
           },
           extraLabels: {
             'konghq.com/component': 'portal',
