@@ -1,0 +1,49 @@
+# https://github.com/keycloak/keycloak-documentation/blob/master/server_installation/topics/operator/keycloak-client-cr.adoc
+# get secrets -nkeycloak keycloak-client-secret-apps -ojsonpath="{.data.CLIENT_SECRET}" | base64 -d;echo
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: apps
+  namespace: keycloak
+  labels:
+    realm: default
+spec:
+  realmSelector:
+    matchLabels:
+      realm: default
+  client:
+    name: "apps"
+    enabled: true
+    clientId: "apps"
+    protocol: openid-connect  
+    implicitFlowEnabled: true
+    standardFlowEnabled: true
+    serviceAccountsEnabled: true
+    directAccessGrantsEnabled: true    
+    clientAuthenticatorType: client-secret
+    redirectUris:
+      - "*"
+      - "https://*.apps.kind.home.arpa/*"
+      - "https://paste.apps.kind.home.arpa/*"
+      - "https://podinfo.apps.kind.home.arpa/*"
+      - "https://manager.kong.kind.home.arpa/*"
+      - "https://portal.kong.kind.home.arpa/*"
+      - "http://*.apps.kind.home.arpa/*"
+      - "http://paste.apps.kind.home.arpa/*"
+      - "http://podinfo.apps.kind.home.arpa/*"
+      - "http://manager.kong.kind.home.arpa/*"
+      - "http://portal.kong.kind.home.arpa/*"
+    webOrigins:
+      - "*"
+#    id: "apps"
+#    baseUrl: "https://paste.apps.kind.home.arpa/"
+#    secret: supersecretclienttoken
+#    publicClient: true
+#    alwaysDisplayInConsole: true
+#    bearerOnly: true
+#    surrogateAuthRequired: false
+#    consentRequired: false
+#    authorizationServicesEnabled: true
+#    frontchannelLogout: false
+#    fullScopeAllowed: true
+#    nodeReRegistrationTimeout: -1

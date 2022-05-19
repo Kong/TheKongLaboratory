@@ -15,18 +15,18 @@ nodes:
   # Control Plane Node
   - role: control-plane
     image: kindest/node:v1.23.3
-    # Control-Plane Persistent image cache (optional)
-    extraMounts:
-    - hostPath: /var/lib/docker/volumes/controlplane1/_data
-      containerPath: /var/lib/containerd
- 
+#   # Control-Plane Persistent image cache (optional)
+#   extraMounts:
+#   - hostPath: /var/lib/docker/volumes/controlplane1/_data
+#     containerPath: /var/lib/containerd
+
   # Worker Node
   - role: worker
     image: kindest/node:v1.23.3
-    # Worker Persistent image cache (optional)
-    extraMounts:
-      - hostPath: /var/lib/docker/volumes/worker1/_data
-        containerPath: /var/lib/containerd
+#   # Worker Persistent image cache (optional)
+#   extraMounts:
+#     - hostPath: /var/lib/docker/volumes/worker1/_data
+#       containerPath: /var/lib/containerd
     # Attach our kind cluster to host ports 80 and 443
     extraPortMappings:
     - listenAddress: "0.0.0.0"

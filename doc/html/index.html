@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.12">
-<title>Kong on Kubernetes with Pulumi</title>
+<title>Kong API Gateway on local Kind Kubernetes</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -440,126 +440,22 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Kong on Kubernetes with Pulumi</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_about">About</h2>
+<h2 id="_kong_api_gateway_on_local_kind_kubernetes">Kong API Gateway on local Kind Kubernetes</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_why">Why?</h3>
-<div class="paragraph">
-<p>The quest for resilience and agility has driven us into the modern age of micro-services. Bringing services to market on a micro service architecture demands utilization of sprawling technology offerings and tooling. Universally this journey includes an infrastructure orchestration phase, an application deployment phase, and a service publishing phase.</p>
-</div>
-<div class="paragraph">
-<p>In this hands on series we will dive into using both Kong API Gateway for service publishing, and Pulumi to orchestrate our infrastructure, deploy our applications, and configure kong.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_tools">Tools</h3>
-<div class="paragraph">
-<p><strong>Kong Gateway</strong> is an API gateway and Ingress Controller. An API gateway is a reverse proxy that allows an organization to offer APIs as a product to internal and external clients via a centralized ingress point. An API gateway shows it’s true value when leveraged to consolidate capabilities such as authentication, session handling, rate limiting, traffic monitoring, and logging. These advanced routing features offload enforcement, maintenance, and visibility from the application teams improving their agility and consolidates this functional ownership into a central location improving global consistency and visibility.</p>
-</div>
-<div class="paragraph">
-<p><strong>Pulumi</strong> is a cloud engineering platform that brings infrastructure teams, developers, and security teams together through a unified software engineering process that accelerates innovation. The Pulumi platform and SDKs allow teams to build, deploy, and manage modern cloud applications faster and with more confidence, using any language, any architecture and any cloud. Supporting Modern Infrastructure as Code using popular programming languages including Python, JavaScript, TypeScript, Go and .NET/C#.</p>
-</div>
-<hr>
-</div>
-<div class="sect2">
-<h3 id="_dependencies">Dependencies</h3>
-<div class="paragraph">
-<p>This article is designed for you to follow along with your MacOS or Linux laptop using Kubernetes-in-Docker (kind). Before starting, please check that you have all prerequisite dependencies.<br></p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top"><strong>Dependency</strong></th>
-<th class="tableblock halign-left valign-top"><strong>Installation Docs</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://kubernetes.io/docs/reference/kubectl/kubectl">kubectl</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-linux">Linux</a> / <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-macos">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.docker.com/">Docker</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://docs.docker.com/engine/install/#server">Linux</a> / <a href="https://docs.docker.com/desktop/mac/install/">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://kind.sigs.k8s.io">Kind</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries">Linux</a> / <a href="https://kind.sigs.k8s.io/docs/user/quick-start/#installing-with-a-package-manager">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://helm.sh/docs/intro/install">Helm</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://helm.sh/docs/intro/install/#from-script">Linux</a> / <a href="https://helm.sh/docs/intro/install/#from-homebrew-macos">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.pulumi.com/docs/get-started/install/#installing-pulumi">Pulumi</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.pulumi.com/docs/get-started/install/#installing-pulumi">Linux</a> / <a href="https://www.pulumi.com/docs/get-started/install/#installing-pulumi">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://nodejs.org/">npm</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/nodesource/distributions#installation-instructions">Linux</a> / <a href="https://nodejs.org/en/download/">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">git client</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Linux</a> / <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Mac</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://everything.curl.dev/get">curl client</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://everything.curl.dev/get/linux">Linux</a> / <a href="https://everything.curl.dev/get/macos">Mac</a></p></td>
-</tr>
-</tbody>
-</table>
-<hr>
-</div>
-<div class="sect2">
-<h3 id="_host_setup">Host Setup</h3>
-<div class="paragraph">
-<p>Okay, now that you have your dependencies, let&#8217;s grab the code and get our system ready to build the lab platform.<br></p>
-</div>
-<div class="exampleblock">
-<div class="content">
+<h3 id="_host_prep">Host Prep</h3>
 <div class="olist arabic">
 <ol class="arabic" start="1">
 <li>
-<p>Write Hosts File Entries</p>
+<p>Make sure you have all <a href="../README.adoc#Dependencies">dependencies</a></p>
 </li>
 </ol>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh"># Set ADDRESS to your public IP address if you plan to use keycloak
-
-export ADDRESS=127.0.0.1
-cat &lt;&lt;EOF | sudo tee -a /etc/hosts
-${ADDRESS}  apps.kind.home.arpa
-${ADDRESS}  portal.kong.kind.home.arpa
-${ADDRESS}  manager.kong.kind.home.arpa
-${ADDRESS}  keycloak.apps.kind.home.arpa
-EOF</code></pre>
-</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
-<li>
-<p>Create docker volumes for persistent local container image caching<br></p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">docker volume create worker1
-docker volume create controlplane1</code></pre>
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic" start="3">
 <li>
 <p>Clone the TheKongLaboratory git repo</p>
 </li>
@@ -567,186 +463,160 @@ docker volume create controlplane1</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">git clone https://github.com/kong/TheKongLaboratory.git ~/thekonglaboratory
-cd ~/thekonglaboratory</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">cd ~
+git clone --depth 1 --branch v2.8.0 https://github.com/kong/TheKongLaboratory
+cd ~/TheKongLaboratory</code></pre>
 </div>
 </div>
 </div>
-</div>
-<hr>
-<div class="sect3">
-<h4 id="_pulumi_infrastructure_as_code">Pulumi Infrastructure as Code</h4>
+<div class="sect2">
+<h3 id="_pulumi_infrastructure_as_code">Pulumi Infrastructure as Code</h3>
 <div class="paragraph">
-<p>Great! Reviewing our check list, we now have:<br></p>
+<p>Great! You now have:<br></p>
 </div>
 <div class="ulist checklist">
 <ul class="checklist">
 <li>
-<p>&#10003; Configured <code>/etc/hosts</code> to resolve our domain names to our host IP.</p>
+<p>&#10003; Installed all <a href="../README.adoc#Dependencies">dependencies</a></p>
 </li>
 <li>
-<p>&#10003; Created local cache volumes for kind node images.</p>
-</li>
-<li>
-<p>&#10003; Cloned the demo repo codebase.</p>
+<p>&#10003; Cloned <a href="https://github.com/kong/TheKongLaboratory">TheKongLaboratory</a> codebase.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Our system is ready to run the lab and we have the code! Before we can deploy our Kong Gateway we need to initialize our Pulumi codebase and configure a stack.<br></p>
+<p>Your system is ready to run the lab and we have the code!<br>
+Before we can deploy our Kong Gateway we need to initialize our Pulumi codebase and configure a stack.<br></p>
 </div>
-<div class="exampleblock">
-<div class="content">
 <div class="olist arabic">
-<ol class="arabic" start="4">
+<ol class="arabic" start="3">
 <li>
 <p>Pulumi local state provider login</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Set a Pulumi local state login password</p>
+</li>
+<li>
+<p>Run pulumi login --help for more state backend and login information</p>
+</li>
+</ul>
+</div>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh"># Set a Pulumi local state login password
-export PULUMI_CONFIG_PASSPHRASE=mypassword
-
-# Run pulumi login --help for more state backend and login information
+<pre class="highlight"><code class="language-sh" data-lang="sh">export PULUMI_CONFIG_PASSPHRASE=mypassword
 pulumi login --local</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="4">
+<li>
+<p>Initialize &amp; Select Pulumi Stack</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Download npm packages for Pulumi typescript IaC</p>
+</li>
+<li>
+<p>Initialize and select your pulumi stack</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">npm install
+pulumi stack init thekonglaboratory &amp;&amp; pulumi stack select thekonglaboratory</code></pre>
 </div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="5">
 <li>
-<p>Initialize &amp; Select Pulumi Stack</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh"># Download npm packages for Pulumi typescript IaC
-npm install
-
-# Initialize and select your pulumi stack
-pulumi stack init thekonglaboratory
-pulumi stack select thekonglaboratory</code></pre>
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic" start="6">
-<li>
 <p>Set Configuration Variables<br></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Create a Kong Enterprise License, an empty license will enable free mode</p>
+</li>
+<li>
+<p>Set enterprise to true if deploying with an enterprise license</p>
+</li>
+</ul>
+</div>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh"># Create a Kong Enterprise License, an empty license will enable free mode
-pulumi config set --secret kong:license "'{}'"
-
-# Set enterprise to true if deploying with an enterprise license
+<pre class="highlight"><code class="language-sh" data-lang="sh">pulumi config set --secret kong:license "'{}'"
 pulumi config set kong:enterprise false</code></pre>
 </div>
 </div>
 </div>
-</div>
-<hr>
-</div>
-<div class="sect3">
-<h4 id="_deploy_the_lab_platform">Deploy the Lab Platform</h4>
+<div class="sect2">
+<h3 id="_deploy_the_lab_platform">Deploy the Lab Platform</h3>
 <div class="paragraph">
 <p>Now, with your prep work done, it is time to start your Kind cluster and deploy Kong to it!</p>
 </div>
-<div class="exampleblock">
-<div class="content">
 <div class="olist arabic">
-<ol class="arabic" start="7">
+<ol class="arabic" start="6">
 <li>
 <p>Deploy Kong Gateway Stack</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Start Kind Kubernetes Cluster</p>
+</li>
+<li>
+<p>Pulumi Deploy Kong Gateway &amp; Dependencies</p>
+</li>
+</ul>
+</div>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh"># Start Kind Kubernetes Cluster
-clear; kind create cluster --config hack/kind/config.yml
-
-# Pulumi Deploy Kong Gateway &amp; Dependencies
+<pre class="highlight"><code class="language-sh" data-lang="sh">kind create cluster --config hack/kind/config.yml
 pulumi up -y</code></pre>
 </div>
 </div>
 <div class="olist arabic">
-<ol class="arabic" start="8">
+<ol class="arabic" start="7">
 <li>
-<p>Go ahead and open up the Kong Manger UI !!<br>
-&gt;&gt; <a href="https://manager.kong.kind.home.arpa/" class="bare">https://manager.kong.kind.home.arpa/</a></p>
+<p>Go ahead and open up the Kong Manger UI !!<br></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://manager.kong.7f000001.nip.io/" class="bare">https://manager.kong.7f000001.nip.io/</a></p>
+</li>
+</ul>
+</div>
 </li>
 </ol>
 </div>
 </div>
 </div>
-<hr>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_conclusion">Conclusion</h3>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Now you have deployed a working Kong Gateway with Pulumi. From here you can continue with configuring kong manager and kong plugins, or you can start using the Kong Ingress Controller to publish services on your kind cluster via Kong.</p>
 </div>
-<hr>
 </div>
-<div class="sect2">
-<h3 id="_next_steps">Next Steps!</h3>
-<div class="paragraph">
-<p>See the following sub-modules for more examples on how to use this platform:<br></p>
 </div>
-<div class="ulist checklist">
-<ul class="checklist">
-<li>
-<p>&#10063; Sample Apps &amp; Kong Ingress Controller</p>
-</li>
-<li>
-<p>&#10063; Sample Plugin: MTLS</p>
-</li>
-<li>
-<p>&#10063; Sample Plugin: JWT Auth</p>
-</li>
-<li>
-<p>&#10063; Sample Plugin: Rate Limiting</p>
-</li>
-<li>
-<p>&#10063; Sample Plugin: OpenPolicyAgent</p>
-</li>
-<li>
-<p>&#10063; Sample Auth: Keycloak</p>
-</li>
-<li>
-<p>&#10063; Kong Consumers</p>
-</li>
-<li>
-<p>&#10063; Kong Upstreams</p>
-</li>
-<li>
-<p>&#10063; Kong Manager</p>
-</li>
-<li>
-<p>&#10063; Kong Developer Portal</p>
-</li>
-<li>
-<p>&#10063; <a href="https://github.com/pulumi/pulumi-kong">Kong Resource Provider</a></p>
-</li>
-<li>
-<p>&#10063; Publish Kong API Gateway via <a href="https://github.com/inlets/inletsctl">Inlets Operator</a></p>
-</li>
-</ul>
-</div>
-<hr>
-</div>
-<div class="sect2">
-<h3 id="_cleanup">Cleanup</h3>
+<div class="sect1">
+<h2 id="_cleanup">Cleanup</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>When you are finished with your local deployment you can destroy your kong deployment, delete the cluster, and clean up the docker volumes with the following commands<br></p>
 </div>
-<div class="exampleblock">
-<div class="content">
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -756,8 +626,9 @@ pulumi up -y</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">cd ~/thekonglaboratory
-export PULUMI_CONFIG_PASSPHRASE=mypassword</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">cd ~/TheKongLaboratory
+export PULUMI_CONFIG_PASSPHRASE=mypassword
+pulumi login --local</code></pre>
 </div>
 </div>
 <div class="olist arabic">
@@ -784,10 +655,7 @@ kind delete cluster --name=kong</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-sh" data-lang="sh">pulumi --stack thekonglaboratory stack rm -y
 docker volume rm worker1 controlplane1
-cd ~ &amp;&amp; rm -rf ~/thekonglaboratory</code></pre>
-</div>
-</div>
-</div>
+cd ~ &amp;&amp; rm -rf ~/TheKongLaboratory</code></pre>
 </div>
 </div>
 </div>
@@ -795,7 +663,7 @@ cd ~ &amp;&amp; rm -rf ~/thekonglaboratory</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-02 16:44:15 -0800
+Last updated 2022-03-30 14:25:28 -0700
 </div>
 </div>
 </body>

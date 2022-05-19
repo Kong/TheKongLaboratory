@@ -38,31 +38,9 @@ Okay, now that you have your dependencies, let's grab the code and get your syst
 ====
 
 [start=1]
-. Write link:https://www.whatsmydns.net/hosts-file.html[Hosts File Entries] to resolve your lab domain names locally
-```sh
-# Set ADDRESS to your host IP address if you plan to use Keycloak
-
-export ADDRESS=127.0.0.1
-cat <<EOF | sudo tee -a /etc/hosts
-${ADDRESS}  apps.kind.home.arpa
-${ADDRESS}  portal.kong.kind.home.arpa
-${ADDRESS}  manager.kong.kind.home.arpa
-${ADDRESS}  keycloak.apps.kind.home.arpa
-${ADDRESS}  podinfo.apps.kind.home.arpa
-EOF
-```
-
-[start=2]
-. Create link:https://www.linode.com/docs/guides/understanding-docker-volumes/[docker volumes] for persistent local container image caching +
-```sh
-docker volume create worker1
-docker volume create controlplane1
-```
-
-[start=3]
 . Clone link:https://github.com/Kong/TheKongLaboratory[TheKongLaboratory] git repo
 ```sh
-cd ~ && git clone --depth 1 --branch v2.8.0 https://github.com/kong/TheKongLaboratory
+cd ~ && git clone --depth 1 --branch v2.8.1-feature-separate-portal-release https://github.com/kong/TheKongLaboratory
 cd ~/TheKongLaboratory
 ```
 
@@ -74,15 +52,13 @@ cd ~/TheKongLaboratory
 Great! Reviewing our check list, we now have: +
 
 * [*] Installed all dependencies.
-* [*] Configured `/etc/hosts` to resolve our domain names to our local IP.
-* [*] Created local cache volumes for kind node images.
 * [*] Cloned the demo repo codebase.
 
 Your system is ready to run the lab and we have the code! Next, before we can deploy the Kong API Gateway we need to link:https://www.pulumi.com/docs/reference/cli/pulumi_stack_init/[initialize the Pulumi codebase] and configure a https://www.pulumi.com/docs/intro/concepts/stack/#stacks[Stack]. +
 
 ====
 
-[start=4]
+[start=2]
 . Configure Pulumi link:https://www.pulumi.com/docs/intro/concepts/state/[local state provider]
 ```sh
 # Set a Pulumi local state login password
@@ -92,7 +68,7 @@ export PULUMI_CONFIG_PASSPHRASE=mypassword
 pulumi login --local
 ```
 
-[start=5]
+[start=3]
 . Initialize & Select Pulumi Stack
 ```sh
 # Download npm packages for Pulumi typescript IaC
@@ -103,7 +79,7 @@ pulumi stack init thekonglaboratory
 pulumi stack select thekonglaboratory
 ```
 
-[start=6]
+[start=4]
 . Set Pulumi Stack link:https://www.pulumi.com/docs/intro/concepts/config/[Configuration Variables] +
 ```sh
 # Set enterprise to true if deploying with an enterprise license
@@ -119,15 +95,13 @@ pulumi config set --secret kong:license "'{}'"
 Reviewing our check list again, we now have: +
 
 * [*] Installed all dependencies.
-* [*] Configured `/etc/hosts` to resolve our domain names to our local IP.
-* [*] Created local cache volumes for kind node images.
 * [*] Cloned the demo repo codebase.
 * [*] Initialized & Configured your Pulumi Stack
 
 Now, it is time to start your Kind cluster and deploy Kong to it!
 
 ====
-[start=7]
+[start=5]
 . Deploy Kong Gateway Stack
 ```sh
 # Start Kind Kubernetes Cluster
@@ -137,9 +111,9 @@ kind create cluster --config hack/kind/config.yml
 pulumi up -y
 ```
 
-[start=8]
+[start=6]
 . Go ahead and open up the Kong Manger UI !! +
->> https://manager.kong.kind.home.arpa/
+>> https://manager.kong.7f000001.nip.io/
 ====
 
 === Deploy a Sample App
@@ -147,7 +121,7 @@ pulumi up -y
 Let's go ahead and test our new Kong API Gateway by deploying link:https://github.com/stefanprodan/podinfo[Podinfo] as a sample application to experiment with. +
 
 ====
-[start=9]
+[start=7]
 . Deploy a simple Podinfo Sample application. +
 ```sh
 # change directory to Podinfo App
@@ -170,6 +144,9 @@ pulumi stack select podinfo
 pulumi up -y
 ```
 
+[start=8]
+. Go ahead and open up the Kong Manger UI !! +
+>> https://podinfo.apps.7f000001.nip.io/
 ====
 
 
@@ -286,13 +263,4 @@ pulumi --stack thekonglaboratory stack rm -y
 cd ~ && rm -rf ~/thekonglaboratory
 ```
 
-[start=5]
-. Open the `/etc/hosts` file and remove the following entries:
-```sh
-127.0.0.1  apps.kind.home.arpa
-127.0.0.1  portal.kong.kind.home.arpa
-127.0.0.1  manager.kong.kind.home.arpa
-127.0.0.1  keycloak.apps.kind.home.arpa
-127.0.0.1  podinfo.apps.kind.home.arpa
-```
 ====
