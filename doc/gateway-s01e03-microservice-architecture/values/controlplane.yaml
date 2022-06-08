@@ -16,7 +16,7 @@ admin:
     enabled: true
     hostname: kong.127-0-0-1.nip.io
     path: /api
-    tls: quickstart-kong-admin-cert
+    tls: kong-admin-cert
   tls:
     containerPort: 8444
     enabled: true
@@ -45,7 +45,7 @@ certificates:
   enabled: true
   portal:
     commonName: developer.127-0-0-1.nip.io
-    enabled: true
+    enabled: false
   proxy:
     commonName: 127-0-0-1.nip.io
     dnsNames:
@@ -90,6 +90,8 @@ env:
   admin_gui_host: kong.127-0-0-1.nip.io
   admin_gui_protocol: https
   admin_gui_url: https://kong.127-0-0-1.nip.io/
+  cluster_cert: /etc/secrets/controlplane-kong-cluster-cert/tls.crt     ## TODO: remove
+  cluster_cert_key: /etc/secrets/controlplane-kong-cluster-cert/tls.key ## TODO: remove
   cluster_data_plane_purge_delay: 60
   cluster_listen: 0.0.0.0:8005
   cluster_telemetry_listen: 0.0.0.0:8006
@@ -144,7 +146,7 @@ env:
   trusted_ips: 0.0.0.0/0,::/0
   vitals: true
 extraLabels:
-  konghq.com/component: quickstart
+  konghq.com/component: controlplane
 image:
   repository: kong/kong-gateway
   tag: "2.8"
@@ -165,7 +167,7 @@ manager:
     enabled: true
     hostname: kong.127-0-0-1.nip.io
     path: /
-    tls: quickstart-kong-admin-cert
+    tls: kong-admin-cert
   tls:
     containerPort: 8445
     enabled: true
@@ -188,6 +190,8 @@ postgresql:
 proxy:
   enabled: false
 replicaCount: 1
+secretVolumes:
+- controlplane-kong-cluster-cert ## TODO: remove
 status:
   enabled: true
   http:

@@ -2,13 +2,12 @@
 :doctitle: Kong Gateway - Microservice Architecture
 :description: Design and implementation of a microservice architecture for the Kong Gateway.
 :homepage: https://konghq.com
+:toc:
 
 = Kong API Gateway | Microservice Architecture =
 
+== About ==
 In this exercise, we will deploy each microservice component of Kong Gateway as it's own separate Helm Release to a local kubernetes cluster.
-
-
-== Kubernetes ==
 
 Tested MacOS & Linux with:
 
@@ -26,15 +25,51 @@ This lab requires the following host and cluster dependencies
 
 === Cluster ===
 
-* cert-manager
-
-    helm upgrade --install cert-manager jetstack/cert-manager \
-     --set installCRDs=true --namespace cert-manager --create-namespace
-
-* postgresql
-
 Example setup of Kind kubernetes
 
     kind create cluster --config ./kind.conf
 
-== Kong Deployment ==
+* Cert Manager
+
+    helm upgrade --install cert-manager jetstack/cert-manager \
+     --set installCRDs=true --namespace cert-manager --create-namespace
+
+* Kong Namespace
+
+    kubectl create namespace kong
+
+* Cert Issuer
+
+    kubectl apply -n kong -f https://raw.githubusercontent.com/Kong/TheKongLaboratory/preview-cert-manager-microservice-gateway/doc/gateway-s01e03-microservice-architecture/issuer.yaml
+
+* Kong License (may be empty json for free mode)
+
+* Kong Configuration Secrets
+** web manager session configuration
+** developer portal session configuration
+** postgres_host address:port
+** Kong super admin user `kong_admin` password
+
+    kubectl create secret generic kong-config-secret -n kong \
+        --from-literal=kong_admin_password=kong \
+        --from-literal=portal_session_conf='{"storage":"kong","secret":"super_secret_salt_string","cookie_name":"portal_session","cookie_samesite":"off","cookie_secure":false}' \
+        --from-literal=admin_gui_session_conf='{"storage":"kong","secret":"super_secret_salt_string","cookie_name":"admin_session","cookie_samesite":"off","cookie_secure":false}' \
+        --from-literal=pg_host="controlplane-postgresql.kong.svc.cluster.local" \
+        --from-literal=pg_port="5432" \
+        --from-literal=password=kong --dry-run=client --output=yaml | kubectl apply -n kong -f -
+
+== Kong ==
+
+Kong is composed of several individual microservices. They can all be used together, or they can be chosen a'la'carte as required for lighter weight use cases.
+
+=== Preview Chart ===
+
+Super secret cert-manager chart support for Kong Gateway.
+
+    gh repo clone Kong/charts ~/kong-charts-helm-project && cd ~/kong-charts-helm-project/charts/kong && gh pr checkout 592
+
+    helm repo add bitnami https://charts.bitnami.com/bitnami ; helm dependencies update
+
+=== Control Plane ===
+
+    helm upgrade --install controlplane --namespace kong --values ./values/controlplane.yaml $HOME/kong-charts-helm-project/charts/kong/
