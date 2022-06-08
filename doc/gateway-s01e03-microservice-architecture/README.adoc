@@ -1,0 +1,40 @@
+:showtitle:
+:doctitle: Kong Gateway - Microservice Architecture
+:description: Design and implementation of a microservice architecture for the Kong Gateway.
+:homepage: https://konghq.com
+
+= Kong API Gateway | Microservice Architecture =
+
+In this exercise, we will deploy each microservice component of Kong Gateway as it's own separate Helm Release to a local kubernetes cluster.
+
+
+== Kubernetes ==
+
+Tested MacOS & Linux with:
+
+* https://kind.sigs.k8s.io/[Kind] Kubernetes
+* Docker Desktop Kubernetes
+
+== Dependencies ==
+This lab requires the following host and cluster dependencies
+
+=== Host ===
+
+* kubectl
+* helm
+* ports 80 and 443 for kong proxy
+
+=== Cluster ===
+
+* cert-manager
+
+    helm upgrade --install cert-manager jetstack/cert-manager \
+     --set installCRDs=true --namespace cert-manager --create-namespace
+
+* postgresql
+
+Example setup of Kind kubernetes
+
+    kind create cluster --config ./kind.conf
+
+== Kong Deployment ==
