@@ -73,3 +73,9 @@ Super secret cert-manager chart support for Kong Gateway.
 === Control Plane ===
 
     helm upgrade --install controlplane --namespace kong --values ./values/controlplane.yaml $HOME/kong-charts-helm-project/charts/kong/
+
+=== Data Plane ===
+
+    helm upgrade --install dataplane --namespace kong --values ./values/dataplane.yaml $HOME/kong-charts-helm-project/charts/kong/
+
+=== Data Plane ===

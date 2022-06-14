@@ -1,0 +1,93 @@
+admin:
+  enabled: false
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/instance
+            operator: In
+            values:
+            - dataplane
+        topologyKey: kubernetes.io/hostname
+      weight: 100
+cluster:
+  enabled: false
+enterprise:
+  enabled: true
+  license_secret: kong-enterprise-license-qw3lgh45
+env:
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  cluster_control_plane: controlplane-kong-cluster.kong.svc.cluster.local:8005
+  cluster_telemetry_endpoint: controlplane-kong-clustertelemetry.kong.svc.cluster.local:8006
+  database: "off"
+  log_level: debug
+  lua_package_path: /opt/?.lua;;
+  lua_ssl_trusted_certificate: /etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt
+  nginx_worker_processes: "2"
+  plugins: bundled,openid-connect
+  prefix: /kong_prefix/
+  proxy_access_log: /dev/stdout
+  proxy_error_log: /dev/stdout
+  proxy_stream_access_log: /dev/stdout
+  proxy_stream_error_log: /dev/stdout
+  role: data_plane
+  ssl_cert: /etc/secrets/kong-controlplane-services-tls/tls.crt
+  ssl_cert_key: /etc/secrets/kong-controlplane-services-tls/tls.key
+  status_error_log: /dev/stdout
+  status_listen: 0.0.0.0:8100
+  trusted_ips: 0.0.0.0/0,::/0
+image:
+  repository: kong/kong-gateway
+  tag: "2.8"
+ingressController:
+  enabled: false
+  installCRDs: false
+manager:
+  enabled: false
+migrations:
+  enabled: false
+  postUpgrade: false
+  preUpgrade: false
+namespace: kong
+portal:
+  enabled: false
+portalapi:
+  enabled: false
+proxy:
+  annotations:
+    prometheus.io/port: "9542"
+    prometheus.io/scrape: "true"
+  enabled: true
+  http:
+    containerPort: 8080
+    enabled: true
+    hostPort: 80
+  ingress:
+    enabled: false
+  labels:
+    enable-metrics: true
+  tls:
+    containerPort: 8443
+    enabled: true
+    hostPort: 443
+  type: ClusterIP
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1G
+  requests:
+    cpu: "1"
+    memory: 1G
+updateStrategy:
+  rollingUpdate:
+    maxSurge: 100%
+    maxUnavailable: 100%
+  type: RollingUpdate
+secretVolumes:
+- kong-controlplane-services-tls
+- kong-proxy-tls
+- kong-cluster-cert

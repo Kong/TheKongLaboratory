@@ -1,0 +1,21 @@
+deployment:
+  kong:
+    enabled: false
+ingressController:
+  enabled: true
+  env:
+    kong_admin_filter_tag: ingress_class_default
+    kong_admin_tls_skip_verify: true
+    kong_admin_token:
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: kong-enterprise-superuser-password
+    kong_admin_url: https://controlplane-kong-admin.kong.svc.cluster.local:8444
+    kong_workspace: default
+    publish_service: kong/dataplane-kong-proxy
+  image:
+    repository: docker.io/kong/kubernetes-ingress-controller
+    tag: "2.2"
+  ingressClass: default
+  installCRDs: false

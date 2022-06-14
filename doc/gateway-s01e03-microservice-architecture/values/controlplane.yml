@@ -14,9 +14,9 @@ admin:
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
       nginx.ingress.kubernetes.io/permanent-redirect-code: "301"
     enabled: true
-    hostname: kong.127-0-0-1.nip.io
+    hostname: manager.kong.7f000001.nip.io
     path: /api
-    tls: kong-admin-cert
+    tls: kong-controlplane-services-tls
   tls:
     containerPort: 8444
     enabled: true
@@ -24,33 +24,6 @@ admin:
     - http2
     servicePort: 8444
   type: ClusterIP
-affinity:
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - podAffinityTerm:
-        labelSelector:
-          matchExpressions:
-          - key: app.kubernetes.io/instance
-            operator: In
-            values:
-            - controlplane
-        topologyKey: kubernetes.io/hostname
-      weight: 100
-certificates:
-  admin:
-    commonName: kong.127-0-0-1.nip.io
-    enabled: true
-  cluster:
-    enabled: true
-  enabled: true
-  portal:
-    commonName: developer.127-0-0-1.nip.io
-    enabled: false
-  proxy:
-    commonName: 127-0-0-1.nip.io
-    dnsNames:
-    - '*.127-0-0-1.nip.io'
-    enabled: true
 cluster:
   enabled: true
   labels:
@@ -67,74 +40,96 @@ clustertelemetry:
     enabled: true
     servicePort: 8006
     type: ClusterIP
+deployment:
+  kong:
+    daemonset: false
+    enabled: true
 enterprise:
   enabled: true
-  license_secret: kong-enterprise-license
+  license_secret: kong-enterprise-license-h7yk1p5u
   portal:
     enabled: false
   rbac:
     admin_api_auth: basic-auth
-    admin_gui_auth_conf_secret: kong-config-secret
+    admin_gui_auth_conf_secret: kong-session-config
     enabled: true
-    session_conf_secret: kong-config-secret
+    session_conf_secret: kong-session-config
   smtp:
     enabled: false
   vitals:
     enabled: true
 env:
   admin_access_log: /dev/stdout
-  admin_api_uri: https://kong.127-0-0-1.nip.io/api
+  admin_api_uri: https://manager.kong.7f000001.nip.io/api
   admin_error_log: /dev/stdout
   admin_gui_access_log: /dev/stdout
   admin_gui_error_log: /dev/stdout
-  admin_gui_host: kong.127-0-0-1.nip.io
+  admin_gui_host: manager.kong.7f000001.nip.io
   admin_gui_protocol: https
-  admin_gui_url: https://kong.127-0-0-1.nip.io/
-  cluster_cert: /etc/secrets/controlplane-kong-cluster-cert/tls.crt     ## TODO: remove
-  cluster_cert_key: /etc/secrets/controlplane-kong-cluster-cert/tls.key ## TODO: remove
+  admin_gui_ssl_cert: /etc/secrets/kong-controlplane-services-tls/tls.crt
+  admin_gui_ssl_cert_key: /etc/secrets/kong-controlplane-services-tls/tls.key
+  admin_gui_url: https://manager.kong.7f000001.nip.io/
+  admin_ssl_cert: /etc/secrets/kong-controlplane-services-tls/tls.crt
+  admin_ssl_cert_key: /etc/secrets/kong-controlplane-services-tls/tls.key
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
   cluster_data_plane_purge_delay: 60
   cluster_listen: 0.0.0.0:8005
   cluster_telemetry_listen: 0.0.0.0:8006
   database: postgres
   log_level: debug
   lua_package_path: /opt/?.lua;;
+  lua_ssl_trusted_certificate: /etc/secrets/kong-cluster-cert/tls.crt,/etc/ssl/certs/ca-certificates.crt
   nginx_worker_processes: "2"
   password:
     valueFrom:
       secretKeyRef:
-        key: kong_admin_password
-        name: kong-config-secret
-  pg_database: kong
+        key: password
+        name: kong-enterprise-superuser-password
+  pg_database:
+    valueFrom:
+      secretKeyRef:
+        key: database
+        name: kong-postgres-config
   pg_host:
     valueFrom:
       secretKeyRef:
-        key: pg_host
-        name: kong-config-secret
+        key: host
+        name: kong-postgres-config
   pg_password:
     valueFrom:
       secretKeyRef:
         key: password
-        name: kong-config-secret
+        name: kong-postgres-config
+  pg_port:
+    valueFrom:
+      secretKeyRef:
+        key: port
+        name: kong-postgres-config
   pg_ssl: "off"
   pg_ssl_verify: "off"
-  pg_user: kong
+  pg_user:
+    valueFrom:
+      secretKeyRef:
+        key: user
+        name: kong-postgres-config
   plugins: bundled,openid-connect
-  portal: false
+  portal: true
   portal_api_access_log: /dev/stdout
   portal_api_error_log: /dev/stdout
-  portal_api_url: https://developer.127-0-0-1.nip.io/api
+  portal_api_uri: https://portal.kong.7f000001.nip.io/api
   portal_auth: basic-auth
   portal_cors_origins: '*'
   portal_gui_access_log: /dev/stdout
   portal_gui_error_log: /dev/stdout
-  portal_gui_host: developer.127-0-0-1.nip.io
+  portal_gui_host: portal.kong.7f000001.nip.io
   portal_gui_protocol: https
-  portal_gui_url: https://developer.127-0-0-1.nip.io/
+  portal_gui_url: https://portal.kong.7f000001.nip.io/
   portal_session_conf:
     valueFrom:
       secretKeyRef:
         key: portal_session_conf
-        name: kong-config-secret
+        name: kong-session-config
   prefix: /kong_prefix/
   proxy_access_log: /dev/stdout
   proxy_error_log: /dev/stdout
@@ -142,6 +137,8 @@ env:
   proxy_stream_error_log: /dev/stdout
   role: control_plane
   smtp_mock: "on"
+  ssl_cert: /etc/secrets/kong-proxy-tls/tls.crt
+  ssl_cert_key: /etc/secrets/kong-proxy-tls/tls.key
   status_listen: 0.0.0.0:8100
   trusted_ips: 0.0.0.0/0,::/0
   vitals: true
@@ -158,16 +155,18 @@ manager:
     konghq.com/protocol: https
   enabled: true
   http:
+    containerPort: 8002
     enabled: false
+    servicePort: 8002
   ingress:
     annotations:
       konghq.com/https-redirect-status-code: "301"
       kubernetes.io/ingress.class: default
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     enabled: true
-    hostname: kong.127-0-0-1.nip.io
+    hostname: manager.kong.7f000001.nip.io
     path: /
-    tls: kong-admin-cert
+    tls: kong-controlplane-services-tls
   tls:
     containerPort: 8445
     enabled: true
@@ -180,18 +179,19 @@ migrations:
   postUpgrade: true
   preUpgrade: true
 namespace: kong
-postgresql:
-  enabled: true
-  global:
-    postgresql:
-      database: kong
-      existingSecret: kong-config-secret
-      username: kong
+podAnnotations:
+  kuma.io/gateway: enabled
+portal:
+  enabled: false
+portalapi:
+  enabled: false
 proxy:
   enabled: false
 replicaCount: 1
 secretVolumes:
-- controlplane-kong-cluster-cert ## TODO: remove
+- kong-controlplane-services-tls
+- kong-cluster-cert
+- kong-proxy-tls
 status:
   enabled: true
   http:
@@ -200,8 +200,3 @@ status:
   tls:
     containerPort: 8543
     enabled: false
-updateStrategy:
-  rollingUpdate:
-    maxSurge: 100%
-    maxUnavailable: 100%
-  type: RollingUpdate
